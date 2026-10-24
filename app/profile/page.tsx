@@ -1,0 +1,293 @@
+'use client';
+
+import React, { useState } from 'react';
+import Link from 'next/link';
+import {
+  MapPin,
+  Tag,
+  CalendarCheck,
+  Check,
+  ArrowRight,
+  ShieldCheck,
+  Compass,
+} from 'lucide-react';
+import { useAuth } from '@/components/auth/AuthProvider';
+import { useCity } from '@/components/providers/CityProvider';
+import { useEvents } from '@/components/providers/EventsProvider';
+import { INDIAN_CITIES } from '@/lib/constants';
+import { EventCard } from '@/components/events/EventCard';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
+
+const AVAILABLE_INTEREST_TAGS = [
+  'AI & Agents',
+  'Hackathons',
+  'Web3 & Crypto',
+  'Founder Meetups',
+  'Indie Acoustic',
+  'Product Design',
+  'Open Source',
+  'Running & Fitness',
+  'Pottery & Arts',
+  'Coffee & Mixers',
+  'Next.js & React',
+  'Cloud Architecture',
+];
+
+export default function ProfilePage() {
+  const { user, signInAsGuest, signOut } = useAuth();
+  const { currentCity, setCity } = useCity();
+  const { events, userRsvpIds, isRsvped, toggleRsvp } = useEvents();
+
+  // Selected interest tags
+  const [selectedInterests, setSelectedInterests] = useState<string[]>([
+    'AI & Agents',
+    'Hackathons',
+    'Founder Meetups',
+  ]);
+
+  const toggleInterest = (tag: string) => {
+    setSelectedInterests((prev) => {
+      const exists = prev.includes(tag);
+      const updated = exists ? prev.filter((t) => t !== tag) : [...prev, tag];
+      toast.info(exists ? `Removed #${tag}` : `Added #${tag} to your radar!`);
+      return updated;
+    });
+  };
+
+  // Filter events user has RSVP'd to
+  const rsvpedEvents = events.filter((e) => userRsvpIds.includes(e.id));
+
+  return (
+    <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-10">
+      
+      {/* Top Header Card */}
+      <div className="p-6 sm:p-8 rounded-3xl apple-glass-card border border-border/80 shadow-lg flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6 text-center sm:text-left">
+        <div className="flex flex-col sm:flex-row items-center gap-5">
+          <Avatar size="lg" className="h-20 w-20 ring-4 ring-rose-500/20 shadow-md">
+            <AvatarImage
+              src={user?.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Guest'}
+              alt={user?.name || 'Explorer'}
+            />
+            <AvatarFallback className="text-xl font-bold bg-muted">
+              {user?.name ? user.name.substring(0, 2).toUpperCase() : 'EX'}
+            </AvatarFallback>
+          </Avatar>
+
+          <div className="space-y-1">
+            <div className="flex items-center justify-center sm:justify-start gap-2">
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
+                {user?.name || 'Guest Explorer'}
+              </h1>
+              <ShieldCheck className="h-5 w-5 text-rose-500" />
+            </div>
+            <p className="text-xs text-muted-foreground">{user?.email || 'guest.demo@eventradar.local'}</p>
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-500/10 text-rose-600 border border-rose-500/20">
+                {user?.role === 'organizer' ? 'Community Organizer' : 'Active Explorer'}
+              </span>
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-muted text-muted-foreground">
+                {currentCity.name} Hub
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Auth Action */}
+        <div className="flex flex-col gap-2 shrink-0">
+          {user ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => signOut()}
+              className="rounded-xl text-xs font-semibold hover:text-rose-500 hover:border-rose-500/30 active:scale-[0.98]"
+            >
+              Sign Out
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              onClick={() => signInAsGuest('attendee')}
+              className="rounded-xl text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white active:scale-[0.98]"
+            >
+              Sign In Demo
+            </Button>
+          )}
+
+          <Link
+            href="/profile/my-events"
+            className={cn(
+              buttonVariants({ variant: 'secondary', size: 'sm' }),
+              'rounded-xl text-xs font-semibold gap-1.5'
+            )}
+          >
+            <span>Organizer Dashboard</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+      </div>
+
+      {/* Grid: Preferences & City Settings */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        {/* Default City Preference Card */}
+        <div className="p-6 rounded-3xl apple-glass-card border border-border/80 space-y-4">
+          <div className="flex items-center gap-2 text-rose-500 font-bold text-xs uppercase tracking-wider">
+            <MapPin className="h-4 w-4" />
+            <span>Default Radar Hub</span>
+          </div>
+          <h3 className="text-lg font-bold text-foreground">Primary Indian City</h3>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Events on your landing page and explore feed will automatically prioritize gatherings in this city.
+          </p>
+
+          <div className="pt-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                className={cn(
+                  buttonVariants({ variant: 'outline', size: 'default' }),
+                  'w-full h-11 px-4 rounded-xl text-xs font-medium justify-between apple-glass-input cursor-pointer active:scale-[0.98]'
+                )}
+              >
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-rose-500" />
+                  <span className="font-semibold text-foreground">{currentCity.name}</span>
+                  <span className="text-muted-foreground text-[11px]">({currentCity.state})</span>
+                </div>
+                <span className="text-xs text-rose-500 font-medium">Change</span>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-72 p-1 rounded-xl apple-glass-card shadow-xl max-h-60 overflow-y-auto">
+                {INDIAN_CITIES.map((c) => (
+                  <DropdownMenuItem
+                    key={c.slug}
+                    onClick={() => {
+                      setCity(c);
+                      toast.success(`Default radar city updated to ${c.name}`);
+                    }}
+                    className={cn(
+                      'text-xs px-2.5 py-1.5 rounded-lg cursor-pointer flex justify-between',
+                      currentCity.slug === c.slug ? 'bg-rose-500/10 text-rose-600 font-semibold' : ''
+                    )}
+                  >
+                    <span>{c.name} ({c.state})</span>
+                    {currentCity.slug === c.slug && <Check className="h-3.5 w-3.5 text-rose-500" />}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+
+        {/* Interests & Topics Selection Card */}
+        <div className="p-6 rounded-3xl apple-glass-card border border-border/80 space-y-4">
+          <div className="flex items-center gap-2 text-rose-500 font-bold text-xs uppercase tracking-wider">
+            <Tag className="h-4 w-4" />
+            <span>Topics & Interests</span>
+          </div>
+          <h3 className="text-lg font-bold text-foreground">Personalize Your Feed</h3>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Select the categories and themes you want to be notified about.
+          </p>
+
+          <div className="flex flex-wrap gap-2 pt-2">
+            {AVAILABLE_INTEREST_TAGS.map((tag) => {
+              const isSelected = selectedInterests.includes(tag);
+              return (
+                <button
+                  key={tag}
+                  onClick={() => toggleInterest(tag)}
+                  className={cn(
+                    'px-3 py-1.5 rounded-full text-xs font-medium border transition-all cursor-pointer active:scale-[0.97]',
+                    isSelected
+                      ? 'bg-rose-600 border-rose-600 text-white shadow-xs'
+                      : 'border-border/80 hover:border-foreground/30 text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  {isSelected ? `✓ #${tag}` : `#${tag}`}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+      </div>
+
+      {/* RSVP'd Events Section */}
+      <div className="space-y-6 pt-4">
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 text-rose-500 font-bold text-xs uppercase tracking-wider">
+              <CalendarCheck className="h-4 w-4" />
+              <span>Upcoming Attendance</span>
+            </div>
+            <h2 className="text-2xl font-bold tracking-tight text-foreground">
+              My Confirmed RSVPs ({rsvpedEvents.length})
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              All events you have registered for with direct Google Maps directions.
+            </p>
+          </div>
+
+          <Link
+            href="/explore"
+            className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'rounded-full text-xs font-semibold')}
+          >
+            <Compass className="h-3.5 w-3.5 mr-1.5" />
+            Discover More
+          </Link>
+        </div>
+
+        {rsvpedEvents.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {rsvpedEvents.map((event) => (
+              <EventCard
+                key={event.id}
+                id={event.id}
+                title={event.title}
+                description={event.description}
+                image_url={event.image_url}
+                date={event.start_time}
+                city={event.city}
+                address={event.address}
+                category={event.category}
+                rsvp_count={event.rsvp_count}
+                latitude={event.latitude}
+                longitude={event.longitude}
+                is_free={event.is_free}
+                price={event.price}
+                isRsvped={isRsvped(event.id)}
+                onRsvpClick={toggleRsvp}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="py-16 text-center rounded-3xl apple-glass-card border border-dashed border-border/80 max-w-lg mx-auto">
+            <CalendarCheck className="h-10 w-10 mx-auto text-muted-foreground/60 mb-3" />
+            <h3 className="font-bold text-base text-foreground">No Upcoming RSVPs</h3>
+            <p className="text-xs text-muted-foreground mt-1.5 max-w-sm mx-auto">
+              You haven&apos;t RSVP&apos;d to any events yet. Check out what is trending in {currentCity.name}!
+            </p>
+            <Link
+              href="/explore"
+              className={cn(
+                buttonVariants({ size: 'sm' }),
+                'mt-5 rounded-full bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold'
+              )}
+            >
+              Explore Events Now
+            </Link>
+          </div>
+        )}
+      </div>
+
+    </div>
+  );
+}

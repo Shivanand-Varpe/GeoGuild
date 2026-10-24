@@ -2,10 +2,11 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Calendar, MapPin, Users, Tag, ArrowRight } from 'lucide-react';
+import { Calendar, MapPin, Users, Tag, ArrowRight, Navigation } from 'lucide-react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { GoogleMapsLink } from '@/components/events/GoogleMapsLink';
 
 export interface EventCardProps {
@@ -22,6 +23,7 @@ export interface EventCardProps {
   longitude: number;
   is_free?: boolean;
   price?: number;
+  distanceKm?: number;
   onRsvpClick?: (id: string) => void;
   isRsvped?: boolean;
 }
@@ -40,6 +42,7 @@ export function EventCard({
   longitude,
   is_free = true,
   price,
+  distanceKm,
   onRsvpClick,
   isRsvped = false,
 }: EventCardProps) {
@@ -63,16 +66,18 @@ export function EventCard({
     <Card className="group flex flex-col overflow-hidden rounded-2xl border bg-card text-card-foreground shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
       {/* Event Image */}
       <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={image_url || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80'}
-          alt={title}
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-          loading="lazy"
-        />
+        <Link href={`/event/${id}`} className="block h-full w-full cursor-pointer">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={image_url || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80'}
+            alt={title}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            loading="lazy"
+          />
+        </Link>
         
         {/* Top Badges */}
-        <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 z-10">
+        <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 z-10 pointer-events-none">
           <Badge variant="secondary" className="bg-background/90 backdrop-blur-md font-medium text-xs shadow-sm">
             <Tag className="h-3 w-3 mr-1 text-primary" />
             {category}
@@ -83,10 +88,19 @@ export function EventCard({
           >
             {is_free ? 'Free Entry' : `₹${price || 499}`}
           </Badge>
+          {distanceKm !== undefined && (
+            <Badge
+              variant="secondary"
+              className="bg-background/95 backdrop-blur-md text-[10px] font-semibold text-rose-600 dark:text-rose-400 border border-rose-500/20 shadow-sm"
+            >
+              <Navigation className="h-2.5 w-2.5 mr-1 text-rose-500" />
+              {distanceKm} km away
+            </Badge>
+          )}
         </div>
 
         {/* City Badge */}
-        <div className="absolute bottom-3 left-3 z-10">
+        <div className="absolute bottom-3 left-3 z-10 pointer-events-none">
           <Badge variant="secondary" className="bg-background/90 backdrop-blur-md text-xs font-semibold shadow-sm">
             <MapPin className="h-3 w-3 mr-1 text-rose-500" />
             {city}
@@ -94,7 +108,7 @@ export function EventCard({
         </div>
 
         {/* Attendees Count */}
-        <div className="absolute bottom-3 right-3 z-10">
+        <div className="absolute bottom-3 right-3 z-10 pointer-events-none">
           <Badge variant="secondary" className="bg-background/90 backdrop-blur-md text-xs font-semibold shadow-sm">
             <Users className="h-3 w-3 mr-1 text-indigo-500" />
             {rsvp_count} going
@@ -154,16 +168,16 @@ export function EventCard({
             {isRsvped ? '✓ Attending' : 'RSVP'}
           </Button>
 
-          <Button
-            asChild
-            size="sm"
-            variant="ghost"
-            className="h-8 w-8 p-0"
+          <Link
+            href={`/event/${id}`}
+            title="View event details"
+            className={cn(
+              buttonVariants({ variant: 'ghost', size: 'sm' }),
+              'h-8 w-8 p-0 rounded-full hover:bg-primary/10 hover:text-primary transition-all active:scale-[0.98]'
+            )}
           >
-            <Link href={`/event/${id}`} title="View event details">
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </Button>
+            <ArrowRight className="h-4 w-4" />
+          </Link>
         </div>
       </CardFooter>
     </Card>
