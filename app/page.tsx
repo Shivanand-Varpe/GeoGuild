@@ -21,7 +21,9 @@ import {
   Utensils,
   ChevronRight,
   TrendingUp,
+  Loader2,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { useCity } from '@/components/providers/CityProvider';
 import { useEvents } from '@/components/providers/EventsProvider';
 import { CATEGORIES } from '@/lib/constants';
@@ -69,11 +71,21 @@ function calculateDistanceKm(
 
 export default function HomePage() {
   const router = useRouter();
-  const { currentCity, setCity, cities } = useCity();
+  const { currentCity, setCity, cities, detectLocation, isLocating } = useCity();
   const { events, isRsvped, toggleRsvp } = useEvents();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategoryTab, setSelectedCategoryTab] = useState<string>('all');
+
+  const handleDetectLocation = async () => {
+    toast.info('Detecting your GPS location...');
+    const detected = await detectLocation();
+    if (detected) {
+      toast.success(`Location snapped to ${detected.name}!`);
+    } else {
+      toast.error('Could not detect location. Please check browser permissions.');
+    }
+  };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -156,7 +168,20 @@ export default function HomePage() {
                 <span className="truncate">{currentCity.name}</span>
                 <span className="text-[10px] text-muted-foreground ml-auto sm:ml-1">Change</span>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-56 p-1 rounded-xl apple-glass-card shadow-xl max-h-72 overflow-y-auto">
+              <DropdownMenuContent align="start" className="w-56 p-1.5 rounded-xl apple-glass-card shadow-xl max-h-80 overflow-y-auto">
+                <DropdownMenuItem
+                  onClick={handleDetectLocation}
+                  disabled={isLocating}
+                  className="flex items-center gap-2 px-2.5 py-2 text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-500/10 hover:bg-rose-500/15 rounded-lg cursor-pointer mb-1 transition-colors"
+                >
+                  {isLocating ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
+                  ) : (
+                    <Navigation className="h-3.5 w-3.5 shrink-0" />
+                  )}
+                  <span>{isLocating ? 'Detecting GPS...' : 'Auto-Detect My City'}</span>
+                </DropdownMenuItem>
+                <div className="h-px bg-border/50 my-1" />
                 {cities.map((c) => (
                   <DropdownMenuItem
                     key={c.slug}

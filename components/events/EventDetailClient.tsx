@@ -17,7 +17,12 @@ import {
   Copy,
   ExternalLink,
   Sparkles,
+  Download,
+  MessageSquare,
+  Send,
+  CalendarPlus,
 } from 'lucide-react';
+import confetti from 'canvas-confetti';
 import { useEvents } from '@/components/providers/EventsProvider';
 import { EventCard } from '@/components/events/EventCard';
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -38,6 +43,46 @@ export function EventDetailClient({ id }: { id: string }) {
   const { events, getEventById, isRsvped, toggleRsvp, isHydrated } = useEvents();
 
   const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [commentInput, setCommentInput] = useState('');
+  const [comments, setComments] = useState<Array<{
+    id: string;
+    name: string;
+    avatar: string;
+    timeAgo: string;
+    text: string;
+    isHost?: boolean;
+  }>>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem(`eventradar_comments_${id}`);
+        if (stored) return JSON.parse(stored);
+      } catch {}
+    }
+    return [
+      {
+        id: 'c1',
+        name: 'Arjun Mehta',
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Arjun',
+        timeAgo: '2 hours ago',
+        text: 'Super excited for this! Is there visitor vehicle parking available near the gate?',
+      },
+      {
+        id: 'c2',
+        name: 'Event Host',
+        avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Host',
+        timeAgo: '1 hour ago',
+        text: 'Yes Arjun! Dedicated basement parking is free for all registered attendees. Looking forward to meeting you!',
+        isHost: true,
+      },
+      {
+        id: 'c3',
+        name: 'Pooja Iyer',
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Pooja',
+        timeAgo: '45 mins ago',
+        text: 'Bringing 2 friends from our local AI club. Great initiative by EventRadar!',
+      },
+    ];
+  });
 
   const event = getEventById(id);
 
@@ -76,6 +121,86 @@ export function EventDetailClient({ id }: { id: string }) {
 
   const isAttending = isRsvped(event.id);
   const mapsUrl = `https://www.google.com/maps?q=${event.latitude},${event.longitude}`;
+
+  // Google Calendar URL helper
+  const getGoogleCalendarUrl = () => {
+    const formatIso = (iso: string) => new Date(iso).toISOString().replace(/-|:|\.\d\d\d/g, '');
+    const start = formatIso(event.start_time);
+    const end = event.end_time ? formatIso(event.end_time) : formatIso(new Date(new Date(event.start_time).getTime() + 3 * 3600 * 1000).toISOString());
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${start}/${end}&details=${encodeURIComponent(event.description || '')}&location=${encodeURIComponent((event.address || '') + ', ' + event.city)}`;
+  };
+
+  // Apple / Outlook iCal (.ics) download
+  const handleDownloadIcs = () => {
+    const formatIso = (iso: string) => new Date(iso).toISOString().replace(/-|:|\.\d\d\d/g, '');
+    const start = formatIso(event.start_time);
+    const end = event.end_time ? formatIso(event.end_time) : formatIso(new Date(new Date(event.start_time).getTime() + 3 * 3600 * 1000).toISOString());
+    const icsContent = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//EventRadar//Hyperlocal Discovery//EN',
+      'BEGIN:VEVENT',
+      `SUMMARY:${event.title}`,
+      `DESCRIPTION:${(event.description || '').replace(/\n/g, '\\n')}`,
+      `LOCATION:${event.address || ''}, ${event.city}`,
+      `DTSTART:${start}`,
+      `DTEND:${end}`,
+      'STATUS:CONFIRMED',
+      'END:VEVENT',
+      'END:VCALENDAR',
+    ].join('\r\n');
+
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `${event.title.substring(0, 30).replace(/\s+/g, '_')}.ics`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast.success('Calendar file (.ics) downloaded!');
+  };
+
+  // RSVP with tactile confetti burst
+  const handleRsvpWithCelebration = () => {
+    const currentlyAttending = isAttending;
+    toggleRsvp(event.id);
+    if (!currentlyAttending) {
+      try {
+        confetti({
+          particleCount: 90,
+          spread: 70,
+          origin: { y: 0.7 },
+          colors: ['#e11d48', '#f59e0b', '#6366f1', '#10b981'],
+        });
+      } catch {
+        // Safe fallback if canvas not available
+      }
+      toast.success('🎉 RSVP confirmed! See you at the venue!');
+    } else {
+      toast.info('RSVP cancelled.');
+    }
+  };
+
+  const handlePostComment = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!commentInput.trim()) return;
+    const newComment = {
+      id: 'c_' + Date.now(),
+      name: 'You (Demo User)',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=You',
+      timeAgo: 'Just now',
+      text: commentInput.trim(),
+    };
+    const updated = [newComment, ...comments];
+    setComments(updated);
+    setCommentInput('');
+    try {
+      localStorage.setItem(`eventradar_comments_${event.id}`, JSON.stringify(updated));
+    } catch {}
+    toast.success('Comment posted to community wall!');
+  };
   
   // Format Date
   const startDate = new Date(event.start_time);
@@ -301,6 +426,65 @@ export function EventDetailClient({ id }: { id: string }) {
             </Button>
           </div>
 
+          {/* Community Discussion Wall */}
+          <div className="p-6 rounded-2xl apple-glass-card shadow-sm border border-border/80 space-y-5">
+            <div className="flex items-center justify-between border-b border-border/50 pb-3">
+              <div className="flex items-center gap-2">
+                <MessageSquare className="h-4 w-4 text-rose-500" />
+                <h3 className="text-base font-bold text-foreground">Community Wall & Questions</h3>
+              </div>
+              <Badge variant="secondary" className="text-[11px] font-semibold">
+                {comments.length} comments
+              </Badge>
+            </div>
+
+            {/* Post comment input form */}
+            <form onSubmit={handlePostComment} className="flex gap-2.5">
+              <input
+                type="text"
+                placeholder="Ask organizer a question or connect with attendees..."
+                value={commentInput}
+                onChange={(e) => setCommentInput(e.target.value)}
+                className="flex-1 h-10 px-3.5 text-xs rounded-xl apple-glass-input outline-none placeholder:text-muted-foreground text-foreground border border-border focus:border-rose-500"
+              />
+              <Button
+                type="submit"
+                size="sm"
+                disabled={!commentInput.trim()}
+                className="h-10 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs gap-1.5 active:scale-[0.98] cursor-pointer"
+              >
+                <Send className="h-3.5 w-3.5" />
+                <span>Post</span>
+              </Button>
+            </form>
+
+            {/* Comments Stream */}
+            <div className="space-y-3.5 pt-1">
+              {comments.map((c) => (
+                <div key={c.id} className="p-3.5 rounded-xl bg-muted/30 border border-border/40 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Avatar className="h-6 w-6">
+                        <AvatarImage src={c.avatar} alt={c.name} />
+                        <AvatarFallback className="text-[10px]">{c.name.substring(0, 2)}</AvatarFallback>
+                      </Avatar>
+                      <span className="text-xs font-semibold text-foreground">{c.name}</span>
+                      {c.isHost && (
+                        <Badge className="bg-rose-500/10 text-rose-600 text-[10px] px-1.5 py-0 h-4 border-0">
+                          Host
+                        </Badge>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-muted-foreground">{c.timeAgo}</span>
+                  </div>
+                  <p className="text-xs text-foreground/85 pl-8 leading-relaxed">
+                    {c.text}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
         </div>
 
         {/* Right 1 Col: Sticky RSVP & Ticket Box */}
@@ -350,7 +534,7 @@ export function EventDetailClient({ id }: { id: string }) {
             {/* Primary RSVP Action Button */}
             <div className="space-y-2.5">
               <Button
-                onClick={() => toggleRsvp(event.id)}
+                onClick={handleRsvpWithCelebration}
                 size="lg"
                 className={cn(
                   'w-full h-12 rounded-2xl font-bold text-sm active:scale-[0.98] transition-all cursor-pointer shadow-md',
@@ -384,6 +568,34 @@ export function EventDetailClient({ id }: { id: string }) {
                 <MapPin className="h-3.5 w-3.5 text-rose-500" />
                 <span>Open Location in Google Maps</span>
               </a>
+
+              {/* Add to Calendar Options */}
+              <div className="pt-2 flex items-center gap-2">
+                <a
+                  href={getGoogleCalendarUrl()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cn(
+                    buttonVariants({ variant: 'ghost', size: 'sm' }),
+                    'flex-1 h-9 rounded-xl text-[11px] font-semibold border border-border/60 hover:bg-muted active:scale-[0.98] flex items-center justify-center gap-1.5'
+                  )}
+                >
+                  <CalendarPlus className="h-3.5 w-3.5 text-rose-500" />
+                  <span>Google Calendar</span>
+                </a>
+
+                <button
+                  type="button"
+                  onClick={handleDownloadIcs}
+                  className={cn(
+                    buttonVariants({ variant: 'ghost', size: 'sm' }),
+                    'flex-1 h-9 rounded-xl text-[11px] font-semibold border border-border/60 hover:bg-muted active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer'
+                  )}
+                >
+                  <Download className="h-3.5 w-3.5 text-indigo-500" />
+                  <span>iCal (.ics)</span>
+                </button>
+              </div>
             </div>
 
             {/* Quick RSVP Note */}
