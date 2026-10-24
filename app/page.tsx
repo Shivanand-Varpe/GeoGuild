@@ -319,6 +319,7 @@ export default function HomePage() {
                   rsvp_count={event.rsvp_count}
                   latitude={event.latitude}
                   longitude={event.longitude}
+                  google_maps_url={event.google_maps_url}
                   is_free={event.is_free}
                   price={event.price}
                   distanceKm={distanceKm}
@@ -403,62 +404,9 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* HOW EVENTRADAR WORKS (3-STEP) */}
-      <section className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
-        <div className="text-center max-w-2xl mx-auto mb-14">
-          <span className="text-rose-500 font-bold text-xs uppercase tracking-wider mb-2 block">
-            Seamless Experience
-          </span>
-          <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-foreground">
-            How EventRadar Works
-          </h2>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-2 leading-relaxed">
-            Engineered with zero friction so you can spend less time searching and more time experiencing.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          
-          {/* Step 1 */}
-          <div className="p-6 rounded-2xl apple-glass-card relative flex flex-col items-start hover:-translate-y-1 transition-all duration-300">
-            <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-rose-500 to-rose-600 text-white flex items-center justify-center font-bold text-lg shadow-md shadow-rose-500/20 mb-5">
-              <Radio className="h-6 w-6" />
-            </div>
-            <span className="text-xs font-bold text-rose-500 uppercase tracking-wider mb-1">Step 01</span>
-            <h3 className="text-lg font-bold text-foreground mb-2">1. Hyperlocal Radar</h3>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Set your city or current locality. Our radar pulls the most active non-stop hackathons, builder mixers, and gatherings within your driving distance.
-            </p>
-          </div>
-
-          {/* Step 2 */}
-          <div className="p-6 rounded-2xl apple-glass-card relative flex flex-col items-start hover:-translate-y-1 transition-all duration-300">
-            <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center font-bold text-lg shadow-md shadow-amber-500/20 mb-5">
-              <Navigation className="h-6 w-6" />
-            </div>
-            <span className="text-xs font-bold text-amber-500 uppercase tracking-wider mb-1">Step 02</span>
-            <h3 className="text-lg font-bold text-foreground mb-2">2. Instant Maps & Directions</h3>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              One tap opens exact GPS turn-by-turn navigation in Google Maps (`https://www.google.com/maps?q=lat,lng`). Never get lost looking for a venue.
-            </p>
-          </div>
-
-          {/* Step 3 */}
-          <div className="p-6 rounded-2xl apple-glass-card relative flex flex-col items-start hover:-translate-y-1 transition-all duration-300">
-            <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-bold text-lg shadow-md shadow-indigo-500/20 mb-5">
-              <Users className="h-6 w-6" />
-            </div>
-            <span className="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-1">Step 03</span>
-            <h3 className="text-lg font-bold text-foreground mb-2">3. RSVP & Connect</h3>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Reserve your spot with a single click. Keep track of all upcoming events on your personal dashboard and connect with other attendees.
-            </p>
-          </div>
-
-        </div>
-
-        {/* Hackathon Callout Banner */}
-        <div className="mt-14 p-8 rounded-3xl bg-gradient-to-r from-rose-600 via-rose-500 to-amber-600 text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl shadow-rose-600/20">
+      {/* Organizer Callout Banner */}
+      <section className="py-14 sm:py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+        <div className="p-8 rounded-3xl bg-gradient-to-r from-rose-600 via-rose-500 to-amber-600 text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl shadow-rose-600/20">
           <div className="space-y-2 text-center md:text-left">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-white/20 backdrop-blur-md">
               <Sparkles className="h-3.5 w-3.5" />

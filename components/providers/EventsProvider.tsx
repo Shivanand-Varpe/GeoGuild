@@ -25,6 +25,8 @@ interface DbEventRecord {
   max_capacity?: number | null;
   organizer_id?: string | null;
   status?: string | null;
+  google_maps_url?: string | null;
+  registration_link?: string | null;
 }
 
 interface EventsContextType {
@@ -55,7 +57,7 @@ const STORAGE_EVENTS_KEY = 'eventradar_custom_events';
 const STORAGE_RSVPS_KEY = 'eventradar_user_rsvps';
 
 export function EventsProvider({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
+  const { user, openAuthModal } = useAuth();
 
   const isHydrated = useSyncExternalStore(
     () => () => {},
@@ -90,7 +92,7 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
         // Fallback
       }
     }
-    return ['evt-1']; // Default RSVP to Vecnaverse hackathon for demo
+    return [];
   });
 
   // Try fetching from live Supabase if credentials are provided
@@ -132,6 +134,7 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
               },
               tags: ['Live', d.city, d.categories?.name || 'Community'],
               status: d.status || 'published',
+              google_maps_url: d.google_maps_url || d.registration_link || undefined,
             }));
 
             setEvents((prev) => {
@@ -158,6 +161,14 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
   };
 
   const toggleRsvp = (eventId: string) => {
+    if (!user) {
+      toast.info('Please sign in with your real account to RSVP', {
+        description: 'Verified profile required — no bot or guest entries.',
+      });
+      openAuthModal();
+      return;
+    }
+
     const willRsvp = !userRsvpIds.includes(eventId);
     const updatedRsvps = willRsvp
       ? [...userRsvpIds, eventId]
@@ -187,12 +198,13 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
       toast.info(`RSVP cancelled for "${targetEvent?.title || 'Event'}".`);
     }
 
-    // Sync with live Supabase database
+    // Sync with live Supabase database if authenticated
     if (
       process.env.NEXT_PUBLIC_SUPABASE_URL &&
       !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder') &&
       eventId.includes('-') &&
-      eventId.length === 36
+      eventId.length === 36 &&
+      user?.id
     ) {
       try {
         const supabase = createClient();
@@ -201,7 +213,7 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
             .from('rsvps')
             .insert({
               event_id: eventId,
-              user_id: user?.id || '33333333-3333-3333-3333-333333333301',
+              user_id: user.id,
               status: 'going',
             })
             .then(({ error }) => {
@@ -213,7 +225,7 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
             .delete()
             .match({
               event_id: eventId,
-              user_id: user?.id || '33333333-3333-3333-3333-333333333301',
+              user_id: user.id,
             })
             .then(({ error }) => {
               if (error) console.info('Supabase live RSVP delete sync note:', error.message);
@@ -230,9 +242,9 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
       id: newId,
       rsvp_count: 1, // creator is first attendee
       organizer: eventData.organizer || {
-        id: user?.id || 'demo-user',
-        name: user?.name || 'Local Organizer',
-        avatar_url: user?.avatar_url || 'https://api.dicebear.com/7.x/bottts/svg?seed=Org',
+        id: user?.id || 'verified-host',
+        name: user?.name || 'Verified Community Organizer',
+        avatar_url: user?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id || 'Host'}`,
       },
     };
 
@@ -280,6 +292,7 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
             price: eventData.price || 0,
             max_capacity: eventData.max_capacity || 150,
             image_url: eventData.image_url,
+            registration_link: eventData.google_maps_url || null,
             status: 'published',
           })
           .then(({ error }) => {

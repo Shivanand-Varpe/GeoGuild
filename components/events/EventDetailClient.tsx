@@ -24,7 +24,9 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useEvents } from '@/components/providers/EventsProvider';
+import { useAuth } from '@/components/auth/AuthProvider';
 import { EventCard } from '@/components/events/EventCard';
+import { PaymentModal } from '@/components/events/PaymentModal';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -40,9 +42,11 @@ import { cn } from '@/lib/utils';
 
 export function EventDetailClient({ id }: { id: string }) {
   const router = useRouter();
+  const { user, openAuthModal } = useAuth();
   const { events, getEventById, isRsvped, toggleRsvp, isHydrated } = useEvents();
 
   const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [commentInput, setCommentInput] = useState('');
   const [comments, setComments] = useState<Array<{
     id: string;
@@ -120,7 +124,7 @@ export function EventDetailClient({ id }: { id: string }) {
   }
 
   const isAttending = isRsvped(event.id);
-  const mapsUrl = `https://www.google.com/maps?q=${event.latitude},${event.longitude}`;
+  const mapsUrl = event.google_maps_url || `https://www.google.com/maps?q=${event.latitude},${event.longitude}`;
 
   // Google Calendar URL helper
   const getGoogleCalendarUrl = () => {
@@ -162,8 +166,19 @@ export function EventDetailClient({ id }: { id: string }) {
     toast.success('Calendar file (.ics) downloaded!');
   };
 
-  // RSVP with tactile confetti burst
+  // RSVP with tactile celebration or payment modal
   const handleRsvpWithCelebration = () => {
+    if (!event.is_free && (event.price ?? 0) > 0 && !isAttending) {
+      setPaymentModalOpen(true);
+      return;
+    }
+
+    if (!user && !isAttending) {
+      toast.info('Please sign in with your real account to RSVP');
+      openAuthModal();
+      return;
+    }
+
     const currentlyAttending = isAttending;
     toggleRsvp(event.id);
     if (!currentlyAttending) {
@@ -185,11 +200,16 @@ export function EventDetailClient({ id }: { id: string }) {
 
   const handlePostComment = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) {
+      toast.info('Please sign in to join the community discussion');
+      openAuthModal();
+      return;
+    }
     if (!commentInput.trim()) return;
     const newComment = {
       id: 'c_' + Date.now(),
-      name: 'You (Demo User)',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=You',
+      name: user.name || user.email.split('@')[0] || 'Community Member',
+      avatar: user.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`,
       timeAgo: 'Just now',
       text: commentInput.trim(),
     };
@@ -540,18 +560,25 @@ export function EventDetailClient({ id }: { id: string }) {
                   'w-full h-12 rounded-2xl font-bold text-sm active:scale-[0.98] transition-all cursor-pointer shadow-md',
                   isAttending
                     ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20'
+                    : !event.is_free
+                    ? 'bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-700 hover:to-amber-700 text-white shadow-rose-600/25'
                     : 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-600/20'
                 )}
               >
                 {isAttending ? (
                   <>
                     <CheckCircle2 className="h-4 w-4 mr-2" />
-                    <span>✓ You are Attending! (Click to cancel)</span>
+                    <span>✓ Attending & Ticket Confirmed (Click to cancel)</span>
+                  </>
+                ) : !event.is_free ? (
+                  <>
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    <span>Get Tickets — ₹{event.price}</span>
                   </>
                 ) : (
                   <>
                     <Users className="h-4 w-4 mr-2" />
-                    <span>Reserve Spot / RSVP Now</span>
+                    <span>Reserve Spot / RSVP Now (Free)</span>
                   </>
                 )}
               </Button>
@@ -702,6 +729,30 @@ export function EventDetailClient({ id }: { id: string }) {
         </DialogContent>
       </Dialog>
 
+      {/* Paid Event Checkout & Ticket Generation Modal */}
+      {!event.is_free && (
+        <PaymentModal
+          isOpen={paymentModalOpen}
+          onClose={() => setPaymentModalOpen(false)}
+          event={{
+            id: event.id,
+            title: event.title,
+            price: event.price ?? 499,
+            start_time: event.start_time,
+            city: event.city,
+            address: event.address,
+            venue_name: event.address,
+            image_url: event.image_url,
+          }}
+          userName={user?.name || 'Event Explorer'}
+          userEmail={user?.email || 'attendee@eventradar.local'}
+          onPaymentSuccess={() => {
+            if (!isAttending) {
+              toggleRsvp(event.id);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

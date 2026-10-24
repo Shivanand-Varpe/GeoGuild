@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 interface GoogleMapsLinkProps {
   latitude: number;
   longitude: number;
+  googleMapsUrl?: string | null;
   label?: string;
   className?: string;
   variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
@@ -16,12 +17,13 @@ interface GoogleMapsLinkProps {
 export function GoogleMapsLink({
   latitude,
   longitude,
+  googleMapsUrl,
   label = 'Open in Google Maps',
   className = '',
   variant = 'outline',
   size = 'sm',
 }: GoogleMapsLinkProps) {
-  const mapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
+  const mapsUrl = googleMapsUrl || `https://www.google.com/maps?q=${latitude},${longitude}`;
 
   return (
     <a

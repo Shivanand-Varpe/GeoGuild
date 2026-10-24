@@ -14,8 +14,13 @@ import {
   TrendingUp,
   BarChart3,
   Calendar,
+  Navigation,
+  Radio,
+  User,
+  ShieldCheck,
 } from 'lucide-react';
 import { useEvents } from '@/components/providers/EventsProvider';
+import { useAuth } from '@/components/auth/AuthProvider';
 import { GoogleMapsLink } from '@/components/events/GoogleMapsLink';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -33,6 +38,7 @@ import { cn } from '@/lib/utils';
 import type { EventItem } from '@/lib/constants';
 
 export default function MyEventsDashboardPage() {
+  const { user, loading, openAuthModal } = useAuth();
   const { events, deleteEvent, updateEvent } = useEvents();
 
   // Dialog state for deleting event
@@ -43,17 +49,18 @@ export default function MyEventsDashboardPage() {
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [editAddress, setEditAddress] = useState('');
+  const [editGoogleMapsUrl, setEditGoogleMapsUrl] = useState('');
   const [editMaxCapacity, setEditMaxCapacity] = useState<number>(150);
   const [editIsFree, setEditIsFree] = useState(true);
   const [editPrice, setEditPrice] = useState<number>(0);
 
-  // Filter events: custom events or created by user, fallback to top sample events so dashboard is always populated with stats
+  // Filter events: custom events or created by user
   const myEvents = React.useMemo(() => {
-    const custom = events.filter((e) => e.id.startsWith('evt-custom'));
-    if (custom.length > 0) return custom;
-    // Show top sample events as demo organizer events
-    return events.slice(0, 3);
-  }, [events]);
+    if (!user) return [];
+    return events.filter(
+      (e) => e.organizer?.id === user.id || e.id.startsWith('evt-custom')
+    );
+  }, [events, user]);
 
   const totalRsvps = myEvents.reduce((acc, ev) => acc + ev.rsvp_count, 0);
   const totalCapacity = myEvents.reduce((acc, ev) => acc + (ev.max_capacity || 150), 0);
@@ -72,6 +79,7 @@ export default function MyEventsDashboardPage() {
     setEditTitle(event.title);
     setEditDescription(event.description || '');
     setEditAddress(event.address || '');
+    setEditGoogleMapsUrl(event.google_maps_url || '');
     setEditMaxCapacity(event.max_capacity || 150);
     setEditIsFree(event.is_free ?? true);
     setEditPrice(event.price || 0);
@@ -83,12 +91,60 @@ export default function MyEventsDashboardPage() {
       title: editTitle.trim() || editingEvent.title,
       description: editDescription.trim() || editingEvent.description,
       address: editAddress.trim() || editingEvent.address,
+      google_maps_url: editGoogleMapsUrl.trim() || editingEvent.google_maps_url,
       max_capacity: Number(editMaxCapacity) || 150,
       is_free: editIsFree,
       price: editIsFree ? 0 : Number(editPrice) || 0,
     });
     setEditingEvent(null);
   };
+
+  // Protect /profile/my-events: If not signed in, show Apple-style login gate
+  if (!user && !loading) {
+    return (
+      <div className="min-h-[75vh] flex items-center justify-center px-4 py-12">
+        <div className="max-w-md w-full p-8 rounded-3xl apple-glass-card border border-border/80 shadow-2xl text-center space-y-6 animate-in fade-in zoom-in-95 duration-300">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 via-rose-600 to-amber-600 text-white shadow-xl shadow-rose-500/25">
+            <Radio className="h-8 w-8" />
+          </div>
+
+          <div className="space-y-2">
+            <h1 className="text-2xl font-extrabold tracking-tight text-foreground">
+              Sign In to Host Dashboard
+            </h1>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Managing hosted events on EventRadar requires a verified organizer profile. Real human hosts only — no bot entries or guest shortcuts.
+            </p>
+          </div>
+
+          <div className="pt-2 flex flex-col gap-3">
+            <Button
+              onClick={() => openAuthModal()}
+              className="w-full h-12 rounded-2xl font-bold text-sm bg-gradient-to-r from-rose-600 to-amber-600 text-white hover:from-rose-700 hover:to-amber-700 active:scale-[0.98] shadow-md shadow-rose-600/25 transition-all cursor-pointer"
+            >
+              <User className="h-4 w-4 mr-2" />
+              <span>Sign In with Real Account</span>
+            </Button>
+
+            <Link
+              href="/explore"
+              className={cn(
+                buttonVariants({ variant: 'outline', size: 'lg' }),
+                'w-full h-11 rounded-2xl text-xs font-semibold apple-glass-input'
+              )}
+            >
+              Explore Public Events
+            </Link>
+          </div>
+
+          <p className="text-[11px] text-muted-foreground flex items-center justify-center gap-1.5 pt-2">
+            <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+            <span>Protected by Supabase Auth. Real accounts only.</span>
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-10">
@@ -177,8 +233,31 @@ export default function MyEventsDashboardPage() {
           <span className="text-xs text-muted-foreground">Live real-time metrics & management</span>
         </div>
 
-        <div className="space-y-4">
-          {myEvents.map((event) => {
+        {myEvents.length === 0 ? (
+          <div className="p-12 text-center rounded-3xl apple-glass-card border border-dashed border-border/80 space-y-4">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-600">
+              <CalendarDays className="h-7 w-7" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="font-bold text-base text-foreground">No events hosted yet</h3>
+              <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                Create and host an event in your city. It will immediately appear on the hyperlocal radar.
+              </p>
+            </div>
+            <Link
+              href="/create"
+              className={cn(
+                buttonVariants({ size: 'sm' }),
+                'rounded-xl text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white'
+              )}
+            >
+              <PlusCircle className="h-3.5 w-3.5 mr-1.5" />
+              <span>Host Your First Event</span>
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {myEvents.map((event) => {
             const cap = event.max_capacity || 150;
             const percent = Math.min(100, Math.round((event.rsvp_count / cap) * 100));
 
@@ -256,6 +335,7 @@ export default function MyEventsDashboardPage() {
                   <GoogleMapsLink
                     latitude={event.latitude}
                     longitude={event.longitude}
+                    googleMapsUrl={event.google_maps_url}
                     label="Map"
                     size="xs"
                     variant="outline"
@@ -298,7 +378,8 @@ export default function MyEventsDashboardPage() {
               </div>
             );
           })}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Edit Event Modal Dialog */}
@@ -342,6 +423,20 @@ export default function MyEventsDashboardPage() {
                   id="edit-address"
                   value={editAddress}
                   onChange={(e) => setEditAddress(e.target.value)}
+                  className="h-10 rounded-xl text-xs apple-glass-input"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="edit-maps-url" className="text-xs font-semibold flex items-center gap-1.5">
+                  <Navigation className="h-3.5 w-3.5 text-rose-500" />
+                  Google Maps Link
+                </Label>
+                <Input
+                  id="edit-maps-url"
+                  placeholder="e.g. https://maps.app.goo.gl/... or https://maps.google.com/?q=..."
+                  value={editGoogleMapsUrl}
+                  onChange={(e) => setEditGoogleMapsUrl(e.target.value)}
                   className="h-10 rounded-xl text-xs apple-glass-input"
                 />
               </div>

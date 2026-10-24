@@ -635,6 +635,7 @@ function ExploreContent() {
                 rsvp_count={event.rsvp_count}
                 latitude={event.latitude}
                 longitude={event.longitude}
+                google_maps_url={event.google_maps_url}
                 is_free={event.is_free}
                 price={event.price}
                 distanceKm={event.distanceKm}
@@ -760,6 +761,7 @@ function ExploreContent() {
                 <GoogleMapsLink
                   latitude={quickViewEvent.latitude}
                   longitude={quickViewEvent.longitude}
+                  googleMapsUrl={quickViewEvent.google_maps_url}
                   label="Maps"
                   size="xs"
                 />

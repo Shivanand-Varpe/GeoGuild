@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { AuthModal } from '@/components/auth/AuthModal';
 import { toast } from 'sonner';
 
 export interface AuthUser {
@@ -13,13 +14,24 @@ export interface AuthUser {
   city?: string;
 }
 
+export interface AuthResponse {
+  success: boolean;
+  error?: string;
+}
+
 interface AuthContextType {
   user: AuthUser | null;
   loading: boolean;
-  isDemoMode: boolean;
-  signInWithEmail: (email: string) => Promise<boolean>;
+  isAuthModalOpen: boolean;
+  openAuthModal: () => void;
+  closeAuthModal: () => void;
+  setAuthModalOpen: (open: boolean) => void;
+  signInWithOtp: (email: string) => Promise<AuthResponse>;
+  verifyOtp: (email: string, token: string) => Promise<AuthResponse>;
+  signInWithPassword: (email: string, password: string) => Promise<AuthResponse>;
+  signUp: (email: string, password: string, name?: string) => Promise<AuthResponse>;
   signInWithOAuth: (provider: 'google' | 'github') => Promise<void>;
-  signInAsGuest: (role?: 'attendee' | 'organizer') => void;
+  signInWithEmail: (email: string) => Promise<boolean>;
   updateUserName: (newName: string) => void;
   signOut: () => Promise<void>;
 }
@@ -27,20 +39,24 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
-  isDemoMode: false,
-  signInWithEmail: async () => false,
+  isAuthModalOpen: false,
+  openAuthModal: () => {},
+  closeAuthModal: () => {},
+  setAuthModalOpen: () => {},
+  signInWithOtp: async () => ({ success: false }),
+  verifyOtp: async () => ({ success: false }),
+  signInWithPassword: async () => ({ success: false }),
+  signUp: async () => ({ success: false }),
   signInWithOAuth: async () => {},
-  signInAsGuest: () => {},
+  signInWithEmail: async () => false,
   updateUserName: () => {},
   signOut: async () => {},
 });
 
-const DEMO_USER_KEY = 'eventradar_demo_user';
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isDemoMode, setIsDemoMode] = useState(false);
+  const [isAuthModalOpen, setAuthModalOpen] = useState(false);
 
   const supabase = React.useMemo(() => {
     try {
@@ -50,47 +66,73 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const openAuthModal = () => setAuthModalOpen(true);
+  const closeAuthModal = () => setAuthModalOpen(false);
+
   useEffect(() => {
     let mounted = true;
 
     async function initAuth() {
-      // First check for active demo user in localStorage
+      if (!supabase) {
+        if (mounted) setLoading(false);
+        return;
+      }
+
       try {
-        const storedDemo = localStorage.getItem(DEMO_USER_KEY);
-        if (storedDemo) {
-          const parsed = JSON.parse(storedDemo);
-          if (mounted) {
-            setUser(parsed);
-            setIsDemoMode(true);
-            setLoading(false);
-            return;
-          }
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (session?.user && mounted) {
+          const u = session.user;
+          setUser({
+            id: u.id,
+            email: u.email || '',
+            name:
+              u.user_metadata?.full_name ||
+              u.user_metadata?.name ||
+              u.email?.split('@')[0] ||
+              'Member',
+            avatar_url:
+              u.user_metadata?.avatar_url ||
+              `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.id}`,
+            role: 'attendee',
+          });
         }
-      } catch {
-        // Continue
+      } catch (err) {
+        console.error('Supabase initial auth check error:', err);
+      } finally {
+        if (mounted) setLoading(false);
       }
 
-      // Check live Supabase session if configured
-      if (supabase && process.env.NEXT_PUBLIC_SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')) {
-        try {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (session?.user && mounted) {
-            setUser({
-              id: session.user.id,
-              email: session.user.email || 'user@eventradar.local',
-              name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'Explorer',
-              avatar_url: session.user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${session.user.id}`,
-            });
-            setIsDemoMode(false);
-          }
-        } catch (err) {
-          console.warn('Supabase auth session check fell back to offline demo mode:', err);
+      // Listen for genuine Supabase auth state changes
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange((_event, session) => {
+        if (session?.user) {
+          const u = session.user;
+          setUser({
+            id: u.id,
+            email: u.email || '',
+            name:
+              u.user_metadata?.full_name ||
+              u.user_metadata?.name ||
+              u.email?.split('@')[0] ||
+              'Member',
+            avatar_url:
+              u.user_metadata?.avatar_url ||
+              `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.id}`,
+            role: 'attendee',
+          });
+        } else {
+          setUser(null);
         }
-      }
-
-      if (mounted) {
         setLoading(false);
-      }
+      });
+
+      return () => {
+        subscription.unsubscribe();
+      };
     }
 
     initAuth();
@@ -100,114 +142,233 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [supabase]);
 
-  const signInWithEmail = async (email: string): Promise<boolean> => {
-    // If live supabase is configured
-    if (supabase && process.env.NEXT_PUBLIC_SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')) {
-      try {
-        const { error } = await supabase.auth.signInWithOtp({
-          email,
-          options: {
-            emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined,
-          },
-        });
-        if (error) throw error;
-        toast.success('Magic sign-in link sent to your email!');
-        return true;
-      } catch (err: unknown) {
-        toast.error((err as Error).message || 'Sign in error');
-      }
+  // Real Email Magic Link / OTP via Supabase
+  const signInWithOtp = async (email: string): Promise<AuthResponse> => {
+    if (!supabase) {
+      toast.error('Authentication service is unavailable.');
+      return { success: false, error: 'Supabase client missing' };
     }
 
-    // Demo fallback sign-in
-    const demoUser: AuthUser = {
-      id: 'demo-user-' + Math.random().toString(36).substring(2, 7),
-      email: email,
-      name: email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-      avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
-      role: 'attendee',
-      city: 'Bengaluru',
-    };
-
-    setUser(demoUser);
-    setIsDemoMode(true);
     try {
-      localStorage.setItem(DEMO_USER_KEY, JSON.stringify(demoUser));
-    } catch {}
-    toast.success(`Welcome back, ${demoUser.name}!`);
-    return true;
+      const redirectUrl =
+        typeof window !== 'undefined'
+          ? `${window.location.origin}/auth/callback`
+          : undefined;
+
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: redirectUrl,
+        },
+      });
+
+      if (error) {
+        toast.error(error.message);
+        return { success: false, error: error.message };
+      }
+
+      toast.success('Magic link & passcode sent! Please check your email inbox.');
+      return { success: true };
+    } catch (err: unknown) {
+      const msg = (err as Error).message || 'Failed to send OTP';
+      toast.error(msg);
+      return { success: false, error: msg };
+    }
   };
 
+  // Verify 6-digit OTP passcode
+  const verifyOtp = async (email: string, token: string): Promise<AuthResponse> => {
+    if (!supabase) {
+      return { success: false, error: 'Supabase client missing' };
+    }
+
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        email,
+        token: token.trim(),
+        type: 'email',
+      });
+
+      if (error) {
+        toast.error(error.message);
+        return { success: false, error: error.message };
+      }
+
+      if (data.user) {
+        setUser({
+          id: data.user.id,
+          email: data.user.email || email,
+          name:
+            data.user.user_metadata?.full_name ||
+            email.split('@')[0] ||
+            'Member',
+          avatar_url:
+            data.user.user_metadata?.avatar_url ||
+            `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.user.id}`,
+        });
+        toast.success('Signed in successfully!');
+        return { success: true };
+      }
+
+      return { success: false, error: 'Verification failed' };
+    } catch (err: unknown) {
+      const msg = (err as Error).message || 'OTP verification error';
+      toast.error(msg);
+      return { success: false, error: msg };
+    }
+  };
+
+  // Sign In with Email & Password
+  const signInWithPassword = async (
+    email: string,
+    password: string
+  ): Promise<AuthResponse> => {
+    if (!supabase) {
+      return { success: false, error: 'Supabase client missing' };
+    }
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        toast.error(error.message);
+        return { success: false, error: error.message };
+      }
+
+      if (data.user) {
+        setUser({
+          id: data.user.id,
+          email: data.user.email || email,
+          name:
+            data.user.user_metadata?.full_name ||
+            email.split('@')[0] ||
+            'Member',
+          avatar_url:
+            data.user.user_metadata?.avatar_url ||
+            `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.user.id}`,
+        });
+        toast.success('Welcome back!');
+        return { success: true };
+      }
+
+      return { success: false };
+    } catch (err: unknown) {
+      const msg = (err as Error).message || 'Sign in error';
+      toast.error(msg);
+      return { success: false, error: msg };
+    }
+  };
+
+  // Sign Up with Email, Password & Name
+  const signUp = async (
+    email: string,
+    password: string,
+    name?: string
+  ): Promise<AuthResponse> => {
+    if (!supabase) {
+      return { success: false, error: 'Supabase client missing' };
+    }
+
+    try {
+      const redirectUrl =
+        typeof window !== 'undefined'
+          ? `${window.location.origin}/auth/callback`
+          : undefined;
+
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            full_name: name || email.split('@')[0],
+          },
+        },
+      });
+
+      if (error) {
+        toast.error(error.message);
+        return { success: false, error: error.message };
+      }
+
+      if (data.session?.user) {
+        setUser({
+          id: data.session.user.id,
+          email: data.session.user.email || email,
+          name: name || email.split('@')[0] || 'Member',
+          avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.session.user.id}`,
+        });
+        toast.success('Account created and signed in!');
+      } else {
+        toast.success(
+          'Account created! Please check your email inbox to verify your account.'
+        );
+      }
+
+      return { success: true };
+    } catch (err: unknown) {
+      const msg = (err as Error).message || 'Sign up error';
+      toast.error(msg);
+      return { success: false, error: msg };
+    }
+  };
+
+  // 1-Click Social OAuth (Google & GitHub)
   const signInWithOAuth = async (provider: 'google' | 'github') => {
-    if (supabase && process.env.NEXT_PUBLIC_SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')) {
-      try {
-        await supabase.auth.signInWithOAuth({
-          provider,
-          options: {
-            redirectTo: `${window.location.origin}/auth/callback`,
-          },
-        });
-        return;
-      } catch (err: unknown) {
-        toast.error((err as Error).message || 'OAuth sign in failed');
-      }
+    if (!supabase) {
+      toast.error('Authentication service is unavailable.');
+      return;
     }
 
-    // Demo fallback OAuth
-    signInAsGuest('attendee');
-  };
-
-  const signInAsGuest = (role: 'attendee' | 'organizer' = 'attendee') => {
-    const isOrg = role === 'organizer';
-    const guestUser: AuthUser = {
-      id: isOrg ? 'org-vecnaverse' : 'guest-attendee-01',
-      email: isOrg ? 'organizer@vecnaverse.dev' : 'attendee@eventradar.local',
-      name: isOrg ? 'Arya Sharma (Organizer)' : 'Guest Explorer',
-      avatar_url: isOrg
-        ? 'https://api.dicebear.com/7.x/bottts/svg?seed=VecnaverseOrg'
-        : 'https://api.dicebear.com/7.x/avataaars/svg?seed=GuestRadar',
-      role,
-      city: 'Bengaluru',
-    };
-
-    setUser(guestUser);
-    setIsDemoMode(true);
     try {
-      localStorage.setItem(DEMO_USER_KEY, JSON.stringify(guestUser));
-    } catch {}
-    toast.success(`Signed in as ${guestUser.name}`);
+      const redirectTo = `${window.location.origin}/auth/callback`;
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo,
+        },
+      });
+
+      if (error) {
+        toast.error(error.message);
+      }
+    } catch (err: unknown) {
+      toast.error((err as Error).message || 'OAuth sign in failed');
+    }
   };
 
-  const updateUserName = (newName: string) => {
+  // Backward compatible helper
+  const signInWithEmail = async (email: string): Promise<boolean> => {
+    const res = await signInWithOtp(email);
+    return res.success;
+  };
+
+  const updateUserName = async (newName: string) => {
     if (!newName.trim()) return;
-    setUser((prev) => {
-      const updated = prev
-        ? { ...prev, name: newName.trim() }
-        : {
-            id: 'guest-explorer',
-            email: 'guest@eventradar.local',
-            name: newName.trim(),
-            avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(newName)}`,
-            role: 'attendee' as const,
-          };
+    const cleanName = newName.trim();
+
+    if (supabase && user) {
       try {
-        localStorage.setItem(DEMO_USER_KEY, JSON.stringify(updated));
+        await supabase.auth.updateUser({
+          data: { full_name: cleanName },
+        });
       } catch {}
-      return updated;
-    });
+    }
+
+    setUser((prev) => (prev ? { ...prev, name: cleanName } : null));
     toast.success('Profile name updated!');
   };
 
   const signOut = async () => {
-    if (supabase && !isDemoMode) {
+    if (supabase) {
       try {
         await supabase.auth.signOut();
       } catch {}
     }
     setUser(null);
-    setIsDemoMode(false);
-    try {
-      localStorage.removeItem(DEMO_USER_KEY);
-    } catch {}
     toast.info('Signed out successfully');
   };
 
@@ -216,15 +377,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       value={{
         user,
         loading,
-        isDemoMode,
-        signInWithEmail,
+        isAuthModalOpen,
+        openAuthModal,
+        closeAuthModal,
+        setAuthModalOpen,
+        signInWithOtp,
+        verifyOtp,
+        signInWithPassword,
+        signUp,
         signInWithOAuth,
-        signInAsGuest,
+        signInWithEmail,
         updateUserName,
         signOut,
       }}
     >
       {children}
+      <AuthModal isOpen={isAuthModalOpen} onClose={closeAuthModal} />
     </AuthContext.Provider>
   );
 }

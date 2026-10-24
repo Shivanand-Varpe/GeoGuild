@@ -11,6 +11,8 @@ import {
   ShieldCheck,
   Compass,
   Pencil,
+  Radio,
+  User,
 } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useCity } from '@/components/providers/CityProvider';
@@ -54,12 +56,12 @@ const AVAILABLE_INTEREST_TAGS = [
 ];
 
 export default function ProfilePage() {
-  const { user, signInAsGuest, signOut, updateUserName } = useAuth();
+  const { user, loading, openAuthModal, signOut, updateUserName } = useAuth();
   const { currentCity, setCity } = useCity();
   const { events, userRsvpIds, isRsvped, toggleRsvp } = useEvents();
 
   const [editNameDialogOpen, setEditNameDialogOpen] = useState(false);
-  const [nameInput, setNameInput] = useState(user?.name || '');
+  const [nameInput, setNameInput] = useState('');
 
   // Selected interest tags
   const [selectedInterests, setSelectedInterests] = useState<string[]>([
@@ -88,6 +90,53 @@ export default function ProfilePage() {
   // Filter events user has RSVP'd to
   const rsvpedEvents = events.filter((e) => userRsvpIds.includes(e.id));
 
+  // Protect Profile: If not signed in, show Apple-style login gate
+  if (!user && !loading) {
+    return (
+      <div className="min-h-[75vh] flex items-center justify-center px-4 py-12">
+        <div className="max-w-md w-full p-8 rounded-3xl apple-glass-card border border-border/80 shadow-2xl text-center space-y-6 animate-in fade-in zoom-in-95 duration-300">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 via-rose-600 to-amber-600 text-white shadow-xl shadow-rose-500/25">
+            <Radio className="h-8 w-8" />
+          </div>
+
+          <div className="space-y-2">
+            <h1 className="text-2xl font-extrabold tracking-tight text-foreground">
+              Sign In to Your Profile
+            </h1>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Access your registered tickets, manage event RSVPs, and personalize your hyperlocal city preferences. Real verified accounts only.
+            </p>
+          </div>
+
+          <div className="pt-2 flex flex-col gap-3">
+            <Button
+              onClick={() => openAuthModal()}
+              className="w-full h-12 rounded-2xl font-bold text-sm bg-gradient-to-r from-rose-600 to-amber-600 text-white hover:from-rose-700 hover:to-amber-700 active:scale-[0.98] shadow-md shadow-rose-600/25 transition-all cursor-pointer"
+            >
+              <User className="h-4 w-4 mr-2" />
+              <span>Sign In with Real Account</span>
+            </Button>
+
+            <Link
+              href="/explore"
+              className={cn(
+                buttonVariants({ variant: 'outline', size: 'lg' }),
+                'w-full h-11 rounded-2xl text-xs font-semibold apple-glass-input'
+              )}
+            >
+              Browse Public Events
+            </Link>
+          </div>
+
+          <p className="text-[11px] text-muted-foreground flex items-center justify-center gap-1.5 pt-2">
+            <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+            <span>Protected by Supabase Auth. No bots or guest shortcuts.</span>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-10">
       
@@ -96,36 +145,36 @@ export default function ProfilePage() {
         <div className="flex flex-col sm:flex-row items-center gap-5">
           <Avatar size="lg" className="h-20 w-20 ring-4 ring-rose-500/20 shadow-md">
             <AvatarImage
-              src={user?.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Guest'}
+              src={user?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id || 'User'}`}
               alt={user?.name || 'Explorer'}
             />
             <AvatarFallback className="text-xl font-bold bg-muted">
-              {user?.name ? user.name.substring(0, 2).toUpperCase() : 'EX'}
+              {user?.name ? user.name.substring(0, 2).toUpperCase() : 'ME'}
             </AvatarFallback>
           </Avatar>
 
-            <div className="space-y-1">
-              <div className="flex items-center justify-center sm:justify-start gap-2">
-                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
-                  {user?.name || 'Guest Explorer'}
-                </h1>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setNameInput(user?.name || '');
-                    setEditNameDialogOpen(true);
-                  }}
-                  title="Edit Name"
-                  className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                </button>
-                <ShieldCheck className="h-5 w-5 text-rose-500" />
-              </div>
-            <p className="text-xs text-muted-foreground">{user?.email || 'guest.demo@eventradar.local'}</p>
+          <div className="space-y-1">
+            <div className="flex items-center justify-center sm:justify-start gap-2">
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
+                {user?.name || 'Verified Explorer'}
+              </h1>
+              <button
+                type="button"
+                onClick={() => {
+                  setNameInput(user?.name || '');
+                  setEditNameDialogOpen(true);
+                }}
+                title="Edit Name"
+                className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </button>
+              <ShieldCheck className="h-5 w-5 text-rose-500" />
+            </div>
+            <p className="text-xs text-muted-foreground">{user?.email}</p>
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-500/10 text-rose-600 border border-rose-500/20">
-                {user?.role === 'organizer' ? 'Community Organizer' : 'Active Explorer'}
+                Verified Account
               </span>
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-muted text-muted-foreground">
                 {currentCity.name} Hub
@@ -136,24 +185,14 @@ export default function ProfilePage() {
 
         {/* Auth Action */}
         <div className="flex flex-col gap-2 shrink-0">
-          {user ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => signOut()}
-              className="rounded-xl text-xs font-semibold hover:text-rose-500 hover:border-rose-500/30 active:scale-[0.98]"
-            >
-              Sign Out
-            </Button>
-          ) : (
-            <Button
-              size="sm"
-              onClick={() => signInAsGuest('attendee')}
-              className="rounded-xl text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white active:scale-[0.98]"
-            >
-              Sign In Demo
-            </Button>
-          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => signOut()}
+            className="rounded-xl text-xs font-semibold hover:text-rose-500 hover:border-rose-500/30 active:scale-[0.98] cursor-pointer"
+          >
+            Sign Out
+          </Button>
 
           <Link
             href="/profile/my-events"

@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   PlusCircle,
   Calendar,
@@ -17,12 +18,16 @@ import {
   UploadCloud,
   X,
   FileImage,
+  Radio,
+  User,
+  ShieldCheck,
 } from 'lucide-react';
 import { useEvents } from '@/components/providers/EventsProvider';
 import { useCity } from '@/components/providers/CityProvider';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { INDIAN_CITIES, CATEGORIES, type City } from '@/lib/constants';
-import { Button } from '@/components/ui/button';
+import { parseGoogleMapsCoordinates } from '@/lib/maps';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -62,7 +67,7 @@ export default function CreateEventPage() {
   const router = useRouter();
   const { createEvent } = useEvents();
   const { currentCity } = useCity();
-  const { user } = useAuth();
+  const { user, loading, openAuthModal } = useAuth();
 
   // Form State
   const [title, setTitle] = useState('');
@@ -70,6 +75,8 @@ export default function CreateEventPage() {
   const [category, setCategory] = useState<string>(CATEGORIES[0].name);
   const [city, setCity] = useState<City>(currentCity);
   const [address, setAddress] = useState('');
+  const [googleMapsUrl, setGoogleMapsUrl] = useState('');
+  const [mapsParseFeedback, setMapsParseFeedback] = useState<string | null>(null);
   const [latitude, setLatitude] = useState<number>(currentCity.latitude);
   const [longitude, setLongitude] = useState<number>(currentCity.longitude);
   const [date, setDate] = useState('2026-10-30');
@@ -88,11 +95,42 @@ export default function CreateEventPage() {
 
   const [submitting, setSubmitting] = useState(false);
 
+  // Handle Google Maps Link change and parse GPS coordinates automatically
+  const handleMapsUrlChange = (url: string) => {
+    setGoogleMapsUrl(url);
+    if (!url.trim()) {
+      setLatitude(city.latitude);
+      setLongitude(city.longitude);
+      setMapsParseFeedback(null);
+      return;
+    }
+    const result = parseGoogleMapsCoordinates(url, {
+      latitude: city.latitude,
+      longitude: city.longitude,
+      cityName: city.name,
+    });
+    setLatitude(result.latitude);
+    setLongitude(result.longitude);
+    setMapsParseFeedback(result.description);
+  };
+
   // Update lat/long when city changes
   const handleCitySelect = (selected: City) => {
     setCity(selected);
-    setLatitude(selected.latitude);
-    setLongitude(selected.longitude);
+    if (!googleMapsUrl.trim()) {
+      setLatitude(selected.latitude);
+      setLongitude(selected.longitude);
+      setMapsParseFeedback(null);
+    } else {
+      const result = parseGoogleMapsCoordinates(googleMapsUrl, {
+        latitude: selected.latitude,
+        longitude: selected.longitude,
+        cityName: selected.name,
+      });
+      setLatitude(result.latitude);
+      setLongitude(result.longitude);
+      setMapsParseFeedback(result.description);
+    }
   };
 
   // Handle Tag toggle
@@ -161,6 +199,7 @@ export default function CreateEventPage() {
         address: address.trim(),
         latitude,
         longitude,
+        google_maps_url: googleMapsUrl.trim() || undefined,
         start_time: startTimeIso,
         image_url: imageUrl,
         is_free: isFree,
@@ -168,10 +207,10 @@ export default function CreateEventPage() {
         max_capacity: Number(maxCapacity) || 100,
         tags: selectedTags.length > 0 ? selectedTags : ['Community', city.name],
         organizer: {
-          id: user?.id || 'demo-organizer',
-          name: user?.name || 'Local Community Host',
+          id: user?.id || 'verified-host',
+          name: user?.name || 'Verified Community Organizer',
           avatar_url:
-            user?.avatar_url || 'https://api.dicebear.com/7.x/bottts/svg?seed=Org',
+            user?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id || 'Org'}`,
         },
       });
 
@@ -182,6 +221,53 @@ export default function CreateEventPage() {
       setSubmitting(false);
     }
   };
+
+  // Protect /create: If not signed in, show Apple-style login gate
+  if (!user && !loading) {
+    return (
+      <div className="min-h-[75vh] flex items-center justify-center px-4 py-12">
+        <div className="max-w-md w-full p-8 rounded-3xl apple-glass-card border border-border/80 shadow-2xl text-center space-y-6 animate-in fade-in zoom-in-95 duration-300">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 via-rose-600 to-amber-600 text-white shadow-xl shadow-rose-500/25">
+            <Radio className="h-8 w-8" />
+          </div>
+
+          <div className="space-y-2">
+            <h1 className="text-2xl font-extrabold tracking-tight text-foreground">
+              Sign In to Host an Event
+            </h1>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Publishing events on EventRadar requires a verified organizer account. Real human hosts only — no bot entries or guest shortcuts.
+            </p>
+          </div>
+
+          <div className="pt-2 flex flex-col gap-3">
+            <Button
+              onClick={() => openAuthModal()}
+              className="w-full h-12 rounded-2xl font-bold text-sm bg-gradient-to-r from-rose-600 to-amber-600 text-white hover:from-rose-700 hover:to-amber-700 active:scale-[0.98] shadow-md shadow-rose-600/25 transition-all cursor-pointer"
+            >
+              <User className="h-4 w-4 mr-2" />
+              <span>Sign In with Real Account</span>
+            </Button>
+
+            <Link
+              href="/explore"
+              className={cn(
+                buttonVariants({ variant: 'outline', size: 'lg' }),
+                'w-full h-11 rounded-2xl text-xs font-semibold apple-glass-input'
+              )}
+            >
+              Explore Existing Events
+            </Link>
+          </div>
+
+          <p className="text-[11px] text-muted-foreground flex items-center justify-center gap-1.5 pt-2">
+            <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+            <span>Protected by Supabase Auth. 1-click Google, GitHub, or Magic Link.</span>
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
@@ -360,46 +446,35 @@ export default function CreateEventPage() {
             />
           </div>
 
-          {/* Coordinate Fields (GPS) for accurate Google Maps */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <Label
-                htmlFor="latitude"
-                className="text-[11px] text-muted-foreground flex items-center gap-1"
-              >
-                <Navigation className="h-3 w-3" />
-                Latitude (Google Maps)
+          {/* Google Maps Link Field (Replaces manual GPS coordinates) */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="googleMapsUrl" className="text-xs font-semibold flex items-center gap-1.5">
+                <Navigation className="h-3.5 w-3.5 text-rose-500" />
+                Google Maps Link
               </Label>
-              <Input
-                id="latitude"
-                type="number"
-                step="any"
-                value={latitude}
-                onChange={(e) => setLatitude(parseFloat(e.target.value) || 0)}
-                className="h-9 rounded-xl text-xs font-mono apple-glass-input"
-              />
+              <span className="text-[10px] text-muted-foreground font-mono">
+                Auto GPS Detection
+              </span>
             </div>
-            <div className="space-y-1">
-              <Label
-                htmlFor="longitude"
-                className="text-[11px] text-muted-foreground flex items-center gap-1"
-              >
-                <Navigation className="h-3 w-3" />
-                Longitude (Google Maps)
-              </Label>
-              <Input
-                id="longitude"
-                type="number"
-                step="any"
-                value={longitude}
-                onChange={(e) => setLongitude(parseFloat(e.target.value) || 0)}
-                className="h-9 rounded-xl text-xs font-mono apple-glass-input"
-              />
-            </div>
+            <Input
+              id="googleMapsUrl"
+              placeholder="e.g. https://maps.app.goo.gl/... or https://maps.google.com/?q=... or venue link"
+              value={googleMapsUrl}
+              onChange={(e) => handleMapsUrlChange(e.target.value)}
+              className="h-11 rounded-xl text-xs apple-glass-input"
+            />
+            {mapsParseFeedback ? (
+              <div className="flex items-center gap-1.5 text-[11px] text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/20">
+                <Check className="h-3.5 w-3.5 shrink-0" />
+                <span>{mapsParseFeedback}</span>
+              </div>
+            ) : (
+              <p className="text-[11px] text-muted-foreground">
+                Paste any Google Maps link from your browser or app. GPS coordinates will be extracted automatically, defaulting to {city.name} center if no pin is found.
+              </p>
+            )}
           </div>
-          <p className="text-[11px] text-muted-foreground">
-            Coordinates automatically filled from city center ({city.name}). Modify for exact venue coordinates.
-          </p>
         </div>
 
         {/* Pricing, Capacity & Visuals */}

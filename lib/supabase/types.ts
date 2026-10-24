@@ -58,6 +58,7 @@ export interface Event {
   is_free: boolean
   price: number
   registration_link: string | null
+  google_maps_url?: string | null
   status: 'draft' | 'published' | 'cancelled'
   view_count: number
   created_at: string
@@ -88,6 +89,7 @@ export interface NearbyEvent {
   is_free: boolean
   price: number
   registration_link: string | null
+  google_maps_url?: string | null
   view_count: number
   organizer_id: string | null
   organizer_name: string | null

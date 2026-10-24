@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { GoogleMapsLink } from '@/components/events/GoogleMapsLink';
+import { PaymentModal } from '@/components/events/PaymentModal';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 export interface EventCardProps {
   id: string;
@@ -21,6 +23,7 @@ export interface EventCardProps {
   rsvp_count: number;
   latitude: number;
   longitude: number;
+  google_maps_url?: string;
   is_free?: boolean;
   price?: number;
   distanceKm?: number;
@@ -40,12 +43,16 @@ export function EventCard({
   rsvp_count,
   latitude,
   longitude,
+  google_maps_url,
   is_free = true,
   price,
   distanceKm,
   onRsvpClick,
   isRsvped = false,
 }: EventCardProps) {
+  const { user, openAuthModal } = useAuth();
+  const [paymentModalOpen, setPaymentModalOpen] = React.useState(false);
+
   // Format date readable
   const formattedDate = React.useMemo(() => {
     try {
@@ -152,6 +159,7 @@ export function EventCard({
         <GoogleMapsLink
           latitude={latitude}
           longitude={longitude}
+          googleMapsUrl={google_maps_url}
           label="Map"
           size="sm"
           variant="outline"
@@ -162,10 +170,21 @@ export function EventCard({
           <Button
             size="sm"
             variant={isRsvped ? 'secondary' : 'default'}
-            className="h-8 text-xs font-semibold px-3"
-            onClick={() => onRsvpClick?.(id)}
+            className={cn(
+              'h-8 text-xs font-semibold px-3 cursor-pointer',
+              !is_free && !isRsvped ? 'bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-700 hover:to-amber-700 text-white' : ''
+            )}
+            onClick={() => {
+              if (!is_free && (price ?? 0) > 0 && !isRsvped) {
+                setPaymentModalOpen(true);
+              } else if (!user && !isRsvped) {
+                openAuthModal();
+              } else {
+                onRsvpClick?.(id);
+              }
+            }}
           >
-            {isRsvped ? '✓ Attending' : 'RSVP'}
+            {isRsvped ? '✓ Attending' : !is_free ? `Tickets (₹${price || 499})` : 'RSVP'}
           </Button>
 
           <Link
@@ -180,6 +199,28 @@ export function EventCard({
           </Link>
         </div>
       </CardFooter>
+
+      {/* Interactive Payment Checkout Modal for Paid Events */}
+      {!is_free && (
+        <PaymentModal
+          isOpen={paymentModalOpen}
+          onClose={() => setPaymentModalOpen(false)}
+          event={{
+            id,
+            title,
+            price: price || 499,
+            start_time: date,
+            city,
+            address,
+            image_url,
+          }}
+          userName={user?.name}
+          userEmail={user?.email}
+          onPaymentSuccess={() => {
+            onRsvpClick?.(id);
+          }}
+        />
+      )}
     </Card>
   );
 }

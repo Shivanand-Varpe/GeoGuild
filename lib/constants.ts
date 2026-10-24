@@ -56,6 +56,7 @@ export interface EventItem {
   };
   tags?: string[];
   status?: string;
+  google_maps_url?: string;
 }
 
 export const SAMPLE_EVENTS: EventItem[] = [
@@ -81,6 +82,7 @@ export const SAMPLE_EVENTS: EventItem[] = [
       avatar_url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Vecnaverse',
     },
     tags: ['AI', 'Hackathon', 'Web3', 'Next.js'],
+    google_maps_url: 'https://www.google.com/maps/search/?api=1&query=12.9352,77.6245',
   },
   {
     id: 'evt-2',
@@ -103,6 +105,7 @@ export const SAMPLE_EVENTS: EventItem[] = [
       avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=NammaTech',
     },
     tags: ['Startups', 'Coffee', 'Networking'],
+    google_maps_url: 'https://www.google.com/maps/search/?api=1&query=12.9784,77.6408',
   },
   {
     id: 'evt-3',
@@ -125,6 +128,7 @@ export const SAMPLE_EVENTS: EventItem[] = [
       avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Underground',
     },
     tags: ['LiveMusic', 'Indie', 'Acoustic'],
+    google_maps_url: 'https://www.google.com/maps/search/?api=1&query=12.9752,77.6033',
   },
   {
     id: 'evt-4',
@@ -147,6 +151,7 @@ export const SAMPLE_EVENTS: EventItem[] = [
       avatar_url: 'https://api.dicebear.com/7.x/bottts/svg?seed=MumbaiDev',
     },
     tags: ['AI', 'LLMs', 'Agents', 'Python'],
+    google_maps_url: 'https://www.google.com/maps/search/?api=1&query=19.0657,72.8687',
   },
   {
     id: 'evt-5',
@@ -169,6 +174,7 @@ export const SAMPLE_EVENTS: EventItem[] = [
       avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=CubbonRun',
     },
     tags: ['Fitness', 'Running', 'Health'],
+    google_maps_url: 'https://www.google.com/maps/search/?api=1&query=12.9763,77.5929',
   },
   {
     id: 'evt-6',
@@ -191,6 +197,7 @@ export const SAMPLE_EVENTS: EventItem[] = [
       avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=CraftsHyd',
     },
     tags: ['Pottery', 'Art', 'Workshop'],
+    google_maps_url: 'https://www.google.com/maps/search/?api=1&query=17.4319,78.4073',
   },
   {
     id: 'evt-7',
@@ -213,6 +220,7 @@ export const SAMPLE_EVENTS: EventItem[] = [
       avatar_url: 'https://api.dicebear.com/7.x/bottts/svg?seed=DelhiAI',
     },
     tags: ['Robotics', 'AI', 'Hardware', 'Demos'],
+    google_maps_url: 'https://www.google.com/maps/search/?api=1&query=28.6186,77.2425',
   },
   {
     id: 'evt-8',
@@ -235,5 +243,6 @@ export const SAMPLE_EVENTS: EventItem[] = [
       avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=PuneOSS',
     },
     tags: ['OpenSource', 'Cloud', 'Rust', 'DevOps'],
-  }
+    google_maps_url: 'https://www.google.com/maps/search/?api=1&query=18.5679,73.9143',
+  },
 ];

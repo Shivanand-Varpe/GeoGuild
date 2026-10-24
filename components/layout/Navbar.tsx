@@ -14,14 +14,12 @@ import {
   LogOut, 
   Menu, 
   X, 
-  Sparkles,
-  ChevronDown,
-  ShieldCheck,
-  Check,
-  Sun,
-  Moon,
-  Navigation,
-  Loader2,
+  ChevronDown, 
+  Check, 
+  Sun, 
+  Moon, 
+  Navigation, 
+  Loader2, 
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTheme } from 'next-themes';
@@ -37,21 +35,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
 export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const { currentCity, setCity, cities, detectLocation, isLocating } = useCity();
-  const { user, signInWithEmail, signInAsGuest, signOut } = useAuth();
+  const { user, openAuthModal, signOut } = useAuth();
   const { setTheme, resolvedTheme } = useTheme();
 
   const handleDetectLocation = async () => {
@@ -71,9 +61,6 @@ export function Navbar() {
   );
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [authDialogOpen, setAuthDialogOpen] = useState(false);
-  const [emailInput, setEmailInput] = useState('');
-  const [emailLoading, setEmailLoading] = useState(false);
 
   const toggleTheme = () => {
     setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
@@ -85,21 +72,6 @@ export function Navbar() {
     { href: '/profile/my-events', label: 'My Events', icon: CalendarDays },
     { href: '/profile', label: 'Profile', icon: UserIcon },
   ];
-
-  const handleEmailSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!emailInput) return;
-    setEmailLoading(true);
-    await signInWithEmail(emailInput);
-    setEmailLoading(false);
-    setAuthDialogOpen(false);
-    setEmailInput('');
-  };
-
-  const handleGuestLogin = (role: 'attendee' | 'organizer') => {
-    signInAsGuest(role);
-    setAuthDialogOpen(false);
-  };
 
   return (
     <>
@@ -282,8 +254,8 @@ export function Navbar() {
             ) : (
               <Button
                 size="sm"
-                onClick={() => setAuthDialogOpen(true)}
-                className="rounded-full h-8 px-3.5 text-xs font-semibold bg-foreground text-background hover:bg-foreground/90 active:scale-[0.97] transition-all shadow-xs"
+                onClick={() => openAuthModal()}
+                className="rounded-full h-8 px-3.5 text-xs font-semibold bg-foreground text-background hover:bg-foreground/90 active:scale-[0.97] transition-all shadow-xs cursor-pointer"
               >
                 <LogIn className="h-3.5 w-3.5 mr-1" />
                 <span>Sign In</span>
@@ -326,84 +298,24 @@ export function Navbar() {
                 </Link>
               );
             })}
+
+            {!user && (
+              <div className="pt-2">
+                <Button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    openAuthModal();
+                  }}
+                  className="w-full h-9 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white cursor-pointer"
+                >
+                  <LogIn className="h-3.5 w-3.5 mr-1.5" />
+                  <span>Sign In with Real Account</span>
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </header>
-
-      {/* Auth Modal Dialog */}
-      <Dialog open={authDialogOpen} onOpenChange={setAuthDialogOpen}>
-        <DialogContent className="sm:max-w-md p-6 rounded-2xl apple-glass-card">
-          <DialogHeader className="text-center pb-2">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 to-amber-600 text-white shadow-lg shadow-rose-500/25 mb-2">
-              <Radio className="h-6 w-6" />
-            </div>
-            <DialogTitle className="text-xl font-bold tracking-tight">Welcome to EventRadar</DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground">
-              Discover real-world experiences, tech hackathons, and gatherings in your city.
-            </DialogDescription>
-          </DialogHeader>
-
-          {/* Quick Demo Mode Instant Buttons */}
-          <div className="space-y-3 pt-2">
-            <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 p-3 text-xs text-rose-800 dark:text-rose-300">
-              <div className="flex items-center gap-1.5 font-semibold">
-                <Sparkles className="h-3.5 w-3.5 text-rose-500" />
-                <span>Instant Hackathon Evaluation Access</span>
-              </div>
-              <p className="mt-1 text-[11px] text-muted-foreground">
-                Click below to immediately simulate a live attendee or organizer session without passwords.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                variant="outline"
-                className="h-9 text-xs font-semibold rounded-xl border-border/80 hover:bg-muted active:scale-[0.98]"
-                onClick={() => handleGuestLogin('attendee')}
-              >
-                <UserIcon className="h-3.5 w-3.5 mr-1.5 text-indigo-500" />
-                Sign in as Attendee
-              </Button>
-              <Button
-                variant="outline"
-                className="h-9 text-xs font-semibold rounded-xl border-border/80 hover:bg-muted active:scale-[0.98]"
-                onClick={() => handleGuestLogin('organizer')}
-              >
-                <ShieldCheck className="h-3.5 w-3.5 mr-1.5 text-amber-500" />
-                Sign in as Organizer
-              </Button>
-            </div>
-
-            <div className="relative my-3 flex items-center justify-center text-xs text-muted-foreground">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t" />
-              </div>
-              <span className="relative bg-popover px-2 text-[11px] uppercase tracking-wider">
-                Or with Email
-              </span>
-            </div>
-
-            {/* Email Magic Link Form */}
-            <form onSubmit={handleEmailSubmit} className="space-y-2.5">
-              <Input
-                type="email"
-                placeholder="your.email@example.com"
-                value={emailInput}
-                onChange={(e) => setEmailInput(e.target.value)}
-                required
-                className="h-9 rounded-xl text-xs apple-glass-input"
-              />
-              <Button
-                type="submit"
-                disabled={emailLoading}
-                className="w-full h-9 rounded-xl text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white active:scale-[0.98] transition-all"
-              >
-                {emailLoading ? 'Sending link...' : 'Continue with Email'}
-              </Button>
-            </form>
-          </div>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }
