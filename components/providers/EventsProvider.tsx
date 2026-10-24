@@ -6,6 +6,27 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 
+interface DbEventRecord {
+  id: string;
+  title: string;
+  description?: string | null;
+  categories?: { name: string; icon?: string } | null;
+  city: string;
+  address?: string | null;
+  venue_name?: string | null;
+  latitude: number | string;
+  longitude: number | string;
+  start_time: string;
+  end_time?: string | null;
+  image_url?: string | null;
+  is_free?: boolean | null;
+  price?: number | string | null;
+  view_count?: number | null;
+  max_capacity?: number | null;
+  organizer_id?: string | null;
+  status?: string | null;
+}
+
 interface EventsContextType {
   events: EventItem[];
   userRsvpIds: string[];
@@ -83,10 +104,40 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
       ) {
         try {
           const supabase = createClient();
-          const { data, error } = await supabase.from('events').select('*');
+          const { data, error } = await supabase
+            .from('events')
+            .select('*, categories(name, icon)');
+
           if (!error && data && data.length > 0 && active) {
+            const mappedDbEvents: EventItem[] = (data as unknown as DbEventRecord[]).map((d) => ({
+              id: d.id,
+              title: d.title,
+              description: d.description || '',
+              category: d.categories?.name || 'Tech & AI',
+              city: d.city === 'Bangalore' ? 'Bengaluru' : d.city,
+              address: d.address || d.venue_name || '',
+              latitude: Number(d.latitude),
+              longitude: Number(d.longitude),
+              start_time: d.start_time,
+              end_time: d.end_time || undefined,
+              image_url: d.image_url || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800',
+              is_free: d.is_free ?? true,
+              price: Number(d.price) || 0,
+              rsvp_count: d.view_count ? Math.round(d.view_count * 0.45) : 34,
+              max_capacity: d.max_capacity || 200,
+              organizer: {
+                id: d.organizer_id || 'org-live',
+                name: 'Verified Host',
+                avatar_url: `https://api.dicebear.com/7.x/bottts/svg?seed=${d.organizer_id || d.id}`,
+              },
+              tags: ['Live', d.city, d.categories?.name || 'Community'],
+              status: d.status || 'published',
+            }));
+
             setEvents((prev) => {
-              return [...data, ...prev.filter((p) => !data.some((d) => d.id === p.id))];
+              // Combine live DB events and local custom created events
+              const customOnly = prev.filter((p) => p.id.startsWith('evt-custom'));
+              return [...customOnly, ...mappedDbEvents, ...SAMPLE_EVENTS.filter((s) => !mappedDbEvents.some((m) => m.title === s.title))];
             });
           }
         } catch {
@@ -135,6 +186,41 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
     } else {
       toast.info(`RSVP cancelled for "${targetEvent?.title || 'Event'}".`);
     }
+
+    // Sync with live Supabase database
+    if (
+      process.env.NEXT_PUBLIC_SUPABASE_URL &&
+      !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder') &&
+      eventId.includes('-') &&
+      eventId.length === 36
+    ) {
+      try {
+        const supabase = createClient();
+        if (willRsvp) {
+          supabase
+            .from('rsvps')
+            .insert({
+              event_id: eventId,
+              user_id: user?.id || '33333333-3333-3333-3333-333333333301',
+              status: 'going',
+            })
+            .then(({ error }) => {
+              if (error) console.info('Supabase live RSVP sync note:', error.message);
+            });
+        } else {
+          supabase
+            .from('rsvps')
+            .delete()
+            .match({
+              event_id: eventId,
+              user_id: user?.id || '33333333-3333-3333-3333-333333333301',
+            })
+            .then(({ error }) => {
+              if (error) console.info('Supabase live RSVP delete sync note:', error.message);
+            });
+        }
+      } catch {}
+    }
   };
 
   const createEvent = (eventData: Omit<EventItem, 'id' | 'rsvp_count'>): EventItem => {
@@ -172,6 +258,35 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
     toast.success('Event published successfully!', {
       description: 'Your event is now live on the Hyperlocal Radar.',
     });
+
+    // Sync with live Supabase database if available
+    if (
+      process.env.NEXT_PUBLIC_SUPABASE_URL &&
+      !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')
+    ) {
+      try {
+        const supabase = createClient();
+        supabase
+          .from('events')
+          .insert({
+            title: eventData.title,
+            description: eventData.description,
+            city: eventData.city,
+            address: eventData.address,
+            latitude: eventData.latitude,
+            longitude: eventData.longitude,
+            start_time: eventData.start_time,
+            is_free: eventData.is_free,
+            price: eventData.price || 0,
+            max_capacity: eventData.max_capacity || 150,
+            image_url: eventData.image_url,
+            status: 'published',
+          })
+          .then(({ error }) => {
+            if (error) console.info('Supabase live event creation note:', error.message);
+          });
+      } catch {}
+    }
 
     return newEvent;
   };
