@@ -124,8 +124,8 @@ event-radar/
 ### 2. Installation
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/GeoGuild.git
-cd GeoGuild
+git clone https://github.com/your-username/event-radar.git
+cd event-radar
 
 # Install dependencies
 npm install
