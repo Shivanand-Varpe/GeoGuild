@@ -77,26 +77,34 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
     () => false
   );
 
-  const [events, setEvents] = useState<EventItem[]>(SAMPLE_EVENTS);
-  const [userRsvpIds, setUserRsvpIds] = useState<string[]>([]);
-
-  // Load client-cached events and RSVPs on mount
-  useEffect(() => {
-    try {
-      const storedEvents = localStorage.getItem(STORAGE_EVENTS_KEY);
-      if (storedEvents) {
-        const customParsed: EventItem[] = JSON.parse(storedEvents);
-        setEvents((prev) => [...customParsed, ...prev.filter((p) => !customParsed.some((c) => c.id === p.id))]);
+  const [events, setEvents] = useState<EventItem[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const storedEvents = localStorage.getItem(STORAGE_EVENTS_KEY);
+        if (storedEvents) {
+          const customParsed: EventItem[] = JSON.parse(storedEvents);
+          return [...customParsed, ...SAMPLE_EVENTS.filter((p) => !customParsed.some((c) => c.id === p.id))];
+        }
+      } catch {
+        // Fallback
       }
-
-      const storedRsvps = localStorage.getItem(STORAGE_RSVPS_KEY);
-      if (storedRsvps) {
-        setUserRsvpIds(JSON.parse(storedRsvps));
-      }
-    } catch {
-      // Ignore
     }
-  }, []);
+    return SAMPLE_EVENTS;
+  });
+
+  const [userRsvpIds, setUserRsvpIds] = useState<string[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const storedRsvps = localStorage.getItem(STORAGE_RSVPS_KEY);
+        if (storedRsvps) {
+          return JSON.parse(storedRsvps);
+        }
+      } catch {
+        // Fallback
+      }
+    }
+    return [];
+  });
 
   // Fetch live Supabase events and real database RSVPs
   useEffect(() => {
