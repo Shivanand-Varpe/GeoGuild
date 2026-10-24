@@ -133,6 +133,69 @@ export interface OrganizerStats {
   total_views: number
 }
 
+export interface OrganizerEvent {
+  id: string
+  title: string
+  description: string
+  category_name: string | null
+  city: string
+  start_time: string
+  end_time: string | null
+  max_capacity: number
+  image_url: string | null
+  is_free: boolean
+  price: number
+  status: string
+  view_count: number
+  rsvp_count: number
+  total_revenue: number
+}
+
+export interface EventAttendee {
+  rsvp_id: string
+  user_id: string
+  user_name: string
+  user_email: string
+  user_avatar: string
+  rsvp_status: string
+  rsvp_created_at: string
+}
+
+export interface TrendingEvent {
+  id: string
+  title: string
+  description: string
+  category_name: string | null
+  category_icon: string | null
+  city: string
+  start_time: string
+  end_time: string | null
+  image_url: string | null
+  is_free: boolean
+  price: number
+  latitude: number
+  longitude: number
+  view_count: number
+  rsvp_count: number
+  trending_score: number
+}
+
+export interface EventReview {
+  id: string
+  rating: number
+  comment: string | null
+  created_at: string
+  user_id: string
+  user_name: string
+  user_avatar: string
+}
+
+export interface AddReviewResponse {
+  success: boolean
+  average_rating: number
+  total_reviews: number
+}
+
 // ==============================================================================
 // HELPER: Google Maps Redirect URL Builder (No API Key Required!)
 // ==============================================================================
