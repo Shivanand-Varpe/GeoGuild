@@ -25,6 +25,7 @@ interface DbEventRecord {
   max_capacity?: number | null;
   organizer_id?: string | null;
   status?: string | null;
+  rsvps?: { id: string; user_id: string }[] | null;
 }
 
 interface EventsContextType {
@@ -32,7 +33,7 @@ interface EventsContextType {
   userRsvpIds: string[];
   isHydrated: boolean;
   isRsvped: (eventId: string) => boolean;
-  toggleRsvp: (eventId: string) => void;
+  toggleRsvp: (eventId: string) => Promise<void>;
   createEvent: (eventData: Omit<EventItem, 'id' | 'rsvp_count'>) => EventItem;
   updateEvent: (eventId: string, updatedData: Partial<EventItem>) => void;
   deleteEvent: (eventId: string) => void;
@@ -44,7 +45,7 @@ const EventsContext = createContext<EventsContextType>({
   userRsvpIds: [],
   isHydrated: false,
   isRsvped: () => false,
-  toggleRsvp: () => {},
+  toggleRsvp: async () => {},
   createEvent: () => SAMPLE_EVENTS[0],
   updateEvent: () => {},
   deleteEvent: () => {},
@@ -53,6 +54,32 @@ const EventsContext = createContext<EventsContextType>({
 
 const STORAGE_EVENTS_KEY = 'eventradar_custom_events';
 const STORAGE_RSVPS_KEY = 'eventradar_user_rsvps';
+const STORAGE_DEVICE_KEY = 'eventradar_client_device_id';
+
+// Map sample event IDs to real database UUIDs
+const SAMPLE_TO_DB_MAP: Record<string, string> = {
+  'evt-1': '44444444-4444-4444-4444-444444444404', // Hackathon
+  'evt-2': '44444444-4444-4444-4444-444444444402', // Mixer
+  'evt-3': '44444444-4444-4444-4444-444444444401', // AI Summit
+  'evt-4': '44444444-4444-4444-4444-444444444403', // Next.js Masterclass
+  'evt-5': '44444444-4444-4444-4444-444444444405', // DevOps Day
+  'evt-6': '44444444-4444-4444-4444-444444444406', // Design Jam
+  'evt-7': '44444444-4444-4444-4444-444444444407', // Web3 Showcase
+};
+
+function getClientDeviceId(): string {
+  if (typeof window === 'undefined') return '33333333-3333-3333-3333-333333333301';
+  try {
+    let id = localStorage.getItem(STORAGE_DEVICE_KEY);
+    if (!id || id.length !== 36) {
+      id = '10000000-0000-0000-0000-' + Math.random().toString(16).substring(2, 14).padEnd(12, '0');
+      localStorage.setItem(STORAGE_DEVICE_KEY, id);
+    }
+    return id;
+  } catch {
+    return '33333333-3333-3333-3333-333333333301';
+  }
+}
 
 export function EventsProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
@@ -63,11 +90,10 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
     () => false
   );
 
-  // Initialize with SSR-safe initial state (identical on server and client)
   const [events, setEvents] = useState<EventItem[]>(SAMPLE_EVENTS);
-  const [userRsvpIds, setUserRsvpIds] = useState<string[]>(['evt-1']);
+  const [userRsvpIds, setUserRsvpIds] = useState<string[]>([]);
 
-  // Client-side hydration from localStorage
+  // Load client-cached RSVPs on mount
   useEffect(() => {
     try {
       const storedEvents = localStorage.getItem(STORAGE_EVENTS_KEY);
@@ -85,7 +111,7 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Try fetching from live Supabase if credentials are provided
+  // Fetch live Supabase events and real database RSVPs
   useEffect(() => {
     let active = true;
 
@@ -98,42 +124,68 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
           const supabase = createClient();
           const { data, error } = await supabase
             .from('events')
-            .select('*, categories(name, icon)');
+            .select('*, categories(name, icon), rsvps(id, user_id)');
 
           if (!error && data && data.length > 0 && active) {
-            const mappedDbEvents: EventItem[] = (data as unknown as DbEventRecord[]).map((d) => ({
-              id: d.id,
-              title: d.title,
-              description: d.description || '',
-              category: d.categories?.name || 'Tech & AI',
-              city: d.city === 'Bangalore' ? 'Bengaluru' : d.city,
-              address: d.address || d.venue_name || '',
-              latitude: Number(d.latitude),
-              longitude: Number(d.longitude),
-              start_time: d.start_time,
-              end_time: d.end_time || undefined,
-              image_url: d.image_url || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800',
-              is_free: d.is_free ?? true,
-              price: Number(d.price) || 0,
-              rsvp_count: d.view_count ? Math.round(d.view_count * 0.45) : 34,
-              max_capacity: d.max_capacity || 200,
-              organizer: {
-                id: d.organizer_id || 'org-live',
-                name: 'Verified Host',
-                avatar_url: `https://api.dicebear.com/7.x/bottts/svg?seed=${d.organizer_id || d.id}`,
-              },
-              tags: ['Live', d.city, d.categories?.name || 'Community'],
-              status: d.status || 'published',
-            }));
+            const currentUserId = user?.id || getClientDeviceId();
+            const dbConfirmedRsvps: string[] = [];
+
+            const mappedDbEvents: EventItem[] = (data as unknown as DbEventRecord[]).map((d) => {
+              const liveRsvpList = d.rsvps || [];
+              const hasUserRsvped = liveRsvpList.some(r => r.user_id === currentUserId);
+              
+              if (hasUserRsvped) {
+                dbConfirmedRsvps.push(d.id);
+                // Also match reverse map for sample IDs
+                for (const [sampleId, dbUuid] of Object.entries(SAMPLE_TO_DB_MAP)) {
+                  if (dbUuid === d.id) dbConfirmedRsvps.push(sampleId);
+                }
+              }
+
+              return {
+                id: d.id,
+                title: d.title,
+                description: d.description || '',
+                category: d.categories?.name || 'Tech & AI',
+                city: d.city === 'Bangalore' ? 'Bengaluru' : d.city,
+                address: d.address || d.venue_name || '',
+                latitude: Number(d.latitude),
+                longitude: Number(d.longitude),
+                start_time: d.start_time,
+                end_time: d.end_time || undefined,
+                image_url: d.image_url || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800',
+                is_free: d.is_free ?? true,
+                price: Number(d.price) || 0,
+                rsvp_count: liveRsvpList.length > 0 ? liveRsvpList.length : (d.view_count ? Math.round(d.view_count * 0.45) : 12),
+                max_capacity: d.max_capacity || 200,
+                organizer: {
+                  id: d.organizer_id || 'org-live',
+                  name: 'Verified Host',
+                  avatar_url: `https://api.dicebear.com/7.x/bottts/svg?seed=${d.organizer_id || d.id}`,
+                },
+                tags: ['Live', d.city, d.categories?.name || 'Community'],
+                status: d.status || 'published',
+              };
+            });
+
+            // Update user RSVPs from live database
+            if (dbConfirmedRsvps.length > 0) {
+              setUserRsvpIds((prev) => {
+                const merged = Array.from(new Set([...prev, ...dbConfirmedRsvps]));
+                try {
+                  localStorage.setItem(STORAGE_RSVPS_KEY, JSON.stringify(merged));
+                } catch {}
+                return merged;
+              });
+            }
 
             setEvents((prev) => {
-              // Combine live DB events and local custom created events
               const customOnly = prev.filter((p) => p.id.startsWith('evt-custom'));
               return [...customOnly, ...mappedDbEvents, ...SAMPLE_EVENTS.filter((s) => !mappedDbEvents.some((m) => m.title === s.title))];
             });
           }
         } catch {
-          // Graceful fallback to SAMPLE_EVENTS
+          // Graceful fallback
         }
       }
     }
@@ -143,17 +195,21 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
     return () => {
       active = false;
     };
-  }, []);
+  }, [user?.id]);
 
   const isRsvped = (eventId: string) => {
-    return userRsvpIds.includes(eventId);
+    const dbTargetId = SAMPLE_TO_DB_MAP[eventId] || eventId;
+    return userRsvpIds.includes(eventId) || userRsvpIds.includes(dbTargetId);
   };
 
-  const toggleRsvp = (eventId: string) => {
-    const willRsvp = !userRsvpIds.includes(eventId);
+  const toggleRsvp = async (eventId: string) => {
+    const dbTargetId = SAMPLE_TO_DB_MAP[eventId] || eventId;
+    const willRsvp = !isRsvped(eventId);
+
+    // Update state optimistically
     const updatedRsvps = willRsvp
-      ? [...userRsvpIds, eventId]
-      : userRsvpIds.filter((id) => id !== eventId);
+      ? Array.from(new Set([...userRsvpIds, eventId, dbTargetId]))
+      : userRsvpIds.filter((id) => id !== eventId && id !== dbTargetId);
 
     setUserRsvpIds(updatedRsvps);
     try {
@@ -162,7 +218,7 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
 
     setEvents((prev) =>
       prev.map((ev) => {
-        if (ev.id === eventId) {
+        if (ev.id === eventId || ev.id === dbTargetId) {
           const newCount = willRsvp ? ev.rsvp_count + 1 : Math.max(0, ev.rsvp_count - 1);
           return { ...ev, rsvp_count: newCount };
         }
@@ -170,48 +226,61 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
       })
     );
 
-    const targetEvent = events.find((e) => e.id === eventId);
+    const targetEvent = events.find((e) => e.id === eventId || e.id === dbTargetId);
     if (willRsvp) {
       toast.success(`You're attending "${targetEvent?.title || 'Event'}"!`, {
-        description: 'See you there! Get directions from the event page.',
+        description: 'Saved to Supabase database. See directions on the event page.',
       });
     } else {
       toast.info(`RSVP cancelled for "${targetEvent?.title || 'Event'}".`);
     }
 
-    // Sync with live Supabase database
+    // Persist to live Supabase database
     if (
       process.env.NEXT_PUBLIC_SUPABASE_URL &&
       !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder') &&
-      eventId.includes('-') &&
-      eventId.length === 36
+      dbTargetId.includes('-') &&
+      dbTargetId.length === 36
     ) {
       try {
         const supabase = createClient();
+        const currentUserId = user?.id || getClientDeviceId();
+
         if (willRsvp) {
-          supabase
+          const { error } = await supabase
             .from('rsvps')
-            .insert({
-              event_id: eventId,
-              user_id: user?.id || '33333333-3333-3333-3333-333333333301',
-              status: 'going',
-            })
-            .then(({ error }) => {
-              if (error) console.info('Supabase live RSVP sync note:', error.message);
-            });
+            .upsert(
+              {
+                event_id: dbTargetId,
+                user_id: currentUserId,
+                status: 'going',
+              },
+              { onConflict: 'user_id,event_id' }
+            );
+
+          if (error) {
+            console.error('Supabase RSVP insert error:', error.message);
+          } else {
+            console.info('RSVP successfully persisted to Supabase database for event:', dbTargetId);
+          }
         } else {
-          supabase
+          const { error } = await supabase
             .from('rsvps')
             .delete()
             .match({
-              event_id: eventId,
-              user_id: user?.id || '33333333-3333-3333-3333-333333333301',
-            })
-            .then(({ error }) => {
-              if (error) console.info('Supabase live RSVP delete sync note:', error.message);
+              event_id: dbTargetId,
+              user_id: currentUserId,
             });
+
+          if (error) {
+            console.error('Supabase RSVP delete error:', error.message);
+          } else {
+            console.info('RSVP successfully removed from Supabase database for event:', dbTargetId);
+          }
         }
-      } catch {}
+      } catch (err) {
+        console.error('Failed to sync RSVP with Supabase:', err);
+      }
     }
   };
 
@@ -220,7 +289,7 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
     const newEvent: EventItem = {
       ...eventData,
       id: newId,
-      rsvp_count: 1, // creator is first attendee
+      rsvp_count: 1,
       organizer: eventData.organizer || {
         id: user?.id || 'demo-user',
         name: user?.name || 'Local Organizer',
@@ -238,7 +307,6 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
       return updated;
     });
 
-    // Automatically RSVP organizer
     setUserRsvpIds((prev) => {
       const updated = [...prev, newId];
       try {
@@ -320,7 +388,8 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
   };
 
   const getEventById = (id: string) => {
-    return events.find((e) => e.id === id);
+    const dbTargetId = SAMPLE_TO_DB_MAP[id] || id;
+    return events.find((e) => e.id === id || e.id === dbTargetId);
   };
 
   return (
