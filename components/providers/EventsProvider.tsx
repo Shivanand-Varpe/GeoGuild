@@ -63,35 +63,27 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
     () => false
   );
 
-  // Lazy state initializers
-  const [events, setEvents] = useState<EventItem[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const storedEvents = localStorage.getItem(STORAGE_EVENTS_KEY);
-        if (storedEvents) {
-          const customParsed: EventItem[] = JSON.parse(storedEvents);
-          return [...customParsed, ...SAMPLE_EVENTS];
-        }
-      } catch {
-        // Fallback
-      }
-    }
-    return SAMPLE_EVENTS;
-  });
+  // Initialize with SSR-safe initial state (identical on server and client)
+  const [events, setEvents] = useState<EventItem[]>(SAMPLE_EVENTS);
+  const [userRsvpIds, setUserRsvpIds] = useState<string[]>(['evt-1']);
 
-  const [userRsvpIds, setUserRsvpIds] = useState<string[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const storedRsvps = localStorage.getItem(STORAGE_RSVPS_KEY);
-        if (storedRsvps) {
-          return JSON.parse(storedRsvps);
-        }
-      } catch {
-        // Fallback
+  // Client-side hydration from localStorage
+  useEffect(() => {
+    try {
+      const storedEvents = localStorage.getItem(STORAGE_EVENTS_KEY);
+      if (storedEvents) {
+        const customParsed: EventItem[] = JSON.parse(storedEvents);
+        setEvents((prev) => [...customParsed, ...prev.filter(p => !customParsed.some(c => c.id === p.id))]);
       }
+
+      const storedRsvps = localStorage.getItem(STORAGE_RSVPS_KEY);
+      if (storedRsvps) {
+        setUserRsvpIds(JSON.parse(storedRsvps));
+      }
+    } catch {
+      // Ignore
     }
-    return ['evt-1']; // Default RSVP to Vecnaverse hackathon for demo
-  });
+  }, []);
 
   // Try fetching from live Supabase if credentials are provided
   useEffect(() => {

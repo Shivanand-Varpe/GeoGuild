@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { INDIAN_CITIES, type City, DEFAULT_CITY } from '@/lib/constants';
 
 interface CityContextType {
@@ -40,22 +40,24 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 
 export function CityProvider({ children }: { children: React.ReactNode }) {
   const [isLocating, setIsLocating] = useState(false);
-  const [currentCity, setCurrentCityState] = useState<City>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) {
-          const found = INDIAN_CITIES.find(
-            (c) => c.slug === stored || c.name.toLowerCase() === stored.toLowerCase()
-          );
-          if (found) return found;
+  const [currentCity, setCurrentCityState] = useState<City>(DEFAULT_CITY);
+
+  // Sync with localStorage on client mount to prevent hydration mismatch
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const found = INDIAN_CITIES.find(
+          (c) => c.slug === stored || c.name.toLowerCase() === stored.toLowerCase()
+        );
+        if (found) {
+          setCurrentCityState(found);
         }
-      } catch {
-        // Ignore localStorage errors
       }
+    } catch {
+      // Ignore
     }
-    return DEFAULT_CITY;
-  });
+  }, []);
 
   const setCity = (city: City) => {
     setCurrentCityState(city);
