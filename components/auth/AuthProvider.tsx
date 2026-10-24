@@ -20,6 +20,7 @@ interface AuthContextType {
   signInWithEmail: (email: string) => Promise<boolean>;
   signInWithOAuth: (provider: 'google' | 'github') => Promise<void>;
   signInAsGuest: (role?: 'attendee' | 'organizer') => void;
+  updateUserName: (newName: string) => void;
   signOut: () => Promise<void>;
 }
 
@@ -30,6 +31,7 @@ const AuthContext = createContext<AuthContextType>({
   signInWithEmail: async () => false,
   signInWithOAuth: async () => {},
   signInAsGuest: () => {},
+  updateUserName: () => {},
   signOut: async () => {},
 });
 
@@ -175,6 +177,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     toast.success(`Signed in as ${guestUser.name}`);
   };
 
+  const updateUserName = (newName: string) => {
+    if (!newName.trim()) return;
+    setUser((prev) => {
+      const updated = prev
+        ? { ...prev, name: newName.trim() }
+        : {
+            id: 'guest-explorer',
+            email: 'guest@eventradar.local',
+            name: newName.trim(),
+            avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(newName)}`,
+            role: 'attendee' as const,
+          };
+      try {
+        localStorage.setItem(DEMO_USER_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+    toast.success('Profile name updated!');
+  };
+
   const signOut = async () => {
     if (supabase && !isDemoMode) {
       try {
@@ -198,6 +220,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signInWithEmail,
         signInWithOAuth,
         signInAsGuest,
+        updateUserName,
         signOut,
       }}
     >

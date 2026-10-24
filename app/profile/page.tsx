@@ -10,6 +10,7 @@ import {
   ArrowRight,
   ShieldCheck,
   Compass,
+  Pencil,
 } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useCity } from '@/components/providers/CityProvider';
@@ -24,6 +25,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -43,9 +54,12 @@ const AVAILABLE_INTEREST_TAGS = [
 ];
 
 export default function ProfilePage() {
-  const { user, signInAsGuest, signOut } = useAuth();
+  const { user, signInAsGuest, signOut, updateUserName } = useAuth();
   const { currentCity, setCity } = useCity();
   const { events, userRsvpIds, isRsvped, toggleRsvp } = useEvents();
+
+  const [editNameDialogOpen, setEditNameDialogOpen] = useState(false);
+  const [nameInput, setNameInput] = useState(user?.name || '');
 
   // Selected interest tags
   const [selectedInterests, setSelectedInterests] = useState<string[]>([
@@ -53,6 +67,14 @@ export default function ProfilePage() {
     'Hackathons',
     'Founder Meetups',
   ]);
+
+  const handleSaveName = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (nameInput.trim()) {
+      updateUserName(nameInput.trim());
+      setEditNameDialogOpen(false);
+    }
+  };
 
   const toggleInterest = (tag: string) => {
     setSelectedInterests((prev) => {
@@ -82,13 +104,24 @@ export default function ProfilePage() {
             </AvatarFallback>
           </Avatar>
 
-          <div className="space-y-1">
-            <div className="flex items-center justify-center sm:justify-start gap-2">
-              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
-                {user?.name || 'Guest Explorer'}
-              </h1>
-              <ShieldCheck className="h-5 w-5 text-rose-500" />
-            </div>
+            <div className="space-y-1">
+              <div className="flex items-center justify-center sm:justify-start gap-2">
+                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
+                  {user?.name || 'Guest Explorer'}
+                </h1>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNameInput(user?.name || '');
+                    setEditNameDialogOpen(true);
+                  }}
+                  title="Edit Name"
+                  className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </button>
+                <ShieldCheck className="h-5 w-5 text-rose-500" />
+              </div>
             <p className="text-xs text-muted-foreground">{user?.email || 'guest.demo@eventradar.local'}</p>
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-500/10 text-rose-600 border border-rose-500/20">
@@ -288,6 +321,48 @@ export default function ProfilePage() {
         )}
       </div>
 
+      {/* Edit Name Dialog */}
+      <Dialog open={editNameDialogOpen} onOpenChange={setEditNameDialogOpen}>
+        <DialogContent className="sm:max-w-md rounded-2xl apple-glass-card shadow-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Profile Name</DialogTitle>
+            <DialogDescription>
+              Update your display name visible across event attendances and community walls.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSaveName} className="space-y-4 pt-2">
+            <div className="space-y-2">
+              <Label htmlFor="display-name" className="text-xs font-semibold">Display Name</Label>
+              <Input
+                id="display-name"
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value)}
+                placeholder="Enter your name..."
+                className="apple-glass-input rounded-xl text-sm"
+                autoFocus
+              />
+            </div>
+            <DialogFooter className="gap-2 sm:gap-0 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setEditNameDialogOpen(false)}
+                className="rounded-xl text-xs"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                className="rounded-xl text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white"
+              >
+                Save Changes
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
