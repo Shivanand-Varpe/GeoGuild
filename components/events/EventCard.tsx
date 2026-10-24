@@ -129,7 +129,7 @@ export function EventCard({
           {/* Date & Time */}
           <div className="flex items-center text-xs font-medium text-primary">
             <Calendar className="mr-1.5 h-3.5 w-3.5 shrink-0" />
-            <span>{formattedDate}</span>
+            <span suppressHydrationWarning>{formattedDate}</span>
           </div>
 
           {/* Title */}

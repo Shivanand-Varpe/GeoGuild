@@ -318,10 +318,10 @@ export function EventDetailClient({ id }: { id: string }) {
           <div className="absolute bottom-4 left-4 right-4 sm:bottom-8 sm:left-8 sm:right-8 z-10 text-white space-y-2">
             <div className="flex items-center gap-2 text-xs font-medium text-rose-300">
               <Calendar className="h-3.5 w-3.5" />
-              <span>{formattedFullDate}</span>
+              <span suppressHydrationWarning>{formattedFullDate}</span>
               <span className="opacity-60">•</span>
               <Clock className="h-3.5 w-3.5" />
-              <span>{formattedTime}</span>
+              <span suppressHydrationWarning>{formattedTime}</span>
             </div>
 
             <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-tight max-w-4xl drop-shadow-sm">

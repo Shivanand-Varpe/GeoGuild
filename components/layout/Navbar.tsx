@@ -31,7 +31,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
+
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
@@ -155,9 +155,9 @@ export function Navbar() {
                   <span>{isLocating ? 'Detecting GPS...' : 'Auto-Detect My City'}</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="my-1" />
-                <DropdownMenuLabel className="px-2 py-1 text-[11px] font-semibold text-muted-foreground">
+                <div className="px-2 py-1 text-[11px] font-semibold text-muted-foreground">
                   Select Indian City
-                </DropdownMenuLabel>
+                </div>
                 {cities.map((city) => (
                   <DropdownMenuItem
                     key={city.slug}

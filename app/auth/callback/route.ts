@@ -19,6 +19,6 @@ export async function GET(request: Request) {
     }
   }
 
-  // Fallback redirect with error flag if code exchange failed
+  // Fallback redirect to destination or home page
   return NextResponse.redirect(`${origin}${next}`);
 }
