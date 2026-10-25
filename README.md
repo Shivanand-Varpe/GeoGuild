@@ -125,7 +125,7 @@ event-radar/
 ### 2. Installation
 ```bash
 # Clone the repository
-git clone https://github.com/Shivanand-Varpe/GeoGuild.git
+git clone https://github.com/Shivanand-Varpe/VP-Boys_ShivanandVarpe.git
 cd event-radar
 
 # Install dependencies
