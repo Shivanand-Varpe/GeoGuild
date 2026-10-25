@@ -272,7 +272,7 @@ def create_deck():
     btn_gh.line.fill.background()
     tf_gh = btn_gh.text_frame
     p_gh = tf_gh.paragraphs[0]
-    p_gh.text = "GitHub Repository ↗\ngithub.com/Shivanand-Varpe/GeoGuild"
+    p_gh.text = "GitHub Repository ↗\ngithub.com/Shivanand-Varpe/VP-Boys_ShivanandVarpe"
     p_gh.font.name = "Segoe UI"
     p_gh.font.size = Pt(8.5)
     p_gh.font.color.rgb = RGBColor(255, 255, 255)
