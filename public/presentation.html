@@ -3,12 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Event Radar — Pitch Deck (VECNAVERSE 2026)</title>
+  <title>Event Radar — Pitch Deck (Team VP Boys)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
-    /* CSS Variables for Clean Light Theme (Default) and Dark Theme */
     :root[data-theme="light"] {
       --bg: #f8fafc;
       --bg-gradient: radial-gradient(circle at 15% 15%, rgba(37, 99, 235, 0.05) 0%, transparent 45%),
@@ -26,7 +25,6 @@
       --accent-cyan: #0284c7;
       --accent-purple: #7c3aed;
       --accent-green: #059669;
-      --accent-amber: #d97706;
       --badge-bg: #eff6ff;
       --badge-border: #bfdbfe;
       --badge-text: #1d4ed8;
@@ -57,7 +55,6 @@
       --accent-cyan: #06b6d4;
       --accent-purple: #a855f7;
       --accent-green: #10b981;
-      --accent-amber: #f59e0b;
       --badge-bg: rgba(6, 182, 212, 0.12);
       --badge-border: rgba(6, 182, 212, 0.3);
       --badge-text: #06b6d4;
@@ -71,11 +68,7 @@
       --controls-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -99,7 +92,6 @@
       background: var(--bg-gradient);
     }
 
-    /* Deck Container (16:9 aspect) */
     .deck-container {
       position: relative;
       z-index: 1;
@@ -116,7 +108,7 @@
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       border-radius: 24px;
-      padding: 44px 52px;
+      padding: 42px 50px;
       display: flex;
       flex-direction: column;
       opacity: 0;
@@ -132,10 +124,7 @@
       transform: translateY(0) scale(1);
     }
 
-    /* Slide Header */
-    .slide-header {
-      margin-bottom: 28px;
-    }
+    .slide-header { margin-bottom: 24px; }
 
     .slide-badge-row {
       display: flex;
@@ -190,7 +179,13 @@
       line-height: 1.45;
     }
 
-    /* Layout Grids */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+      flex: 1;
+    }
+
     .grid-3 {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -213,7 +208,7 @@
       display: flex;
       flex-direction: column;
       position: relative;
-      transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+      transition: transform 0.25s, box-shadow 0.25s;
     }
 
     .card:hover {
@@ -253,9 +248,7 @@
       gap: 8px;
     }
 
-    .card-list li strong {
-      color: var(--text);
-    }
+    .card-list li strong { color: var(--text); }
 
     .card-list li::before {
       content: "•";
@@ -264,53 +257,68 @@
       line-height: 1.2;
     }
 
-    /* Slide 5 Table */
+    /* Links on Slide 1 */
+    .links-row {
+      display: flex;
+      gap: 14px;
+      margin-top: auto;
+      padding-top: 18px;
+    }
+
+    .link-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .link-btn.github {
+      background: #0f172a;
+      color: #ffffff;
+    }
+
+    .link-btn.youtube {
+      background: #e11d48;
+      color: #ffffff;
+    }
+
+    .link-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+    }
+
+    /* Table on Slide 6 */
     .table-container {
       width: 100%;
       border-radius: 14px;
       overflow: hidden;
       border: 1px solid var(--inner-card-border);
       background: var(--card-bg);
-      margin-bottom: 18px;
+      margin-bottom: 16px;
     }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      text-align: left;
-    }
-
-    th, td {
-      padding: 12px 18px;
-      font-size: 0.85rem;
-    }
-
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th, td { padding: 11px 18px; font-size: 0.85rem; }
     th {
       background: var(--table-header-bg);
       color: var(--text);
       font-weight: 700;
-      letter-spacing: 0.02em;
       border-bottom: 1px solid var(--inner-card-border);
     }
-
-    th.col-highlight, td.col-highlight {
-      background: var(--table-highlight-col);
-    }
-
-    td.col-highlight {
-      color: var(--table-highlight-text);
-      font-weight: 700;
-    }
-
-    tr:not(:last-child) td {
-      border-bottom: 1px solid var(--inner-card-border);
-    }
+    th.col-highlight, td.col-highlight { background: var(--table-highlight-col); }
+    td.col-highlight { color: var(--table-highlight-text); font-weight: 700; }
+    tr:not(:last-child) td { border-bottom: 1px solid var(--inner-card-border); }
 
     .killer-box {
       background: var(--killer-box-bg);
       border: 1px solid var(--killer-box-border);
       border-radius: 14px;
-      padding: 16px 20px;
+      padding: 14px 20px;
       display: flex;
       align-items: center;
       gap: 16px;
@@ -328,17 +336,9 @@
       text-transform: uppercase;
     }
 
-    .killer-text {
-      font-size: 0.88rem;
-      color: var(--text-body);
-      line-height: 1.45;
-    }
+    .killer-text { font-size: 0.88rem; color: var(--text-body); line-height: 1.45; }
+    .killer-text strong { color: var(--text); }
 
-    .killer-text strong {
-      color: var(--text);
-    }
-
-    /* Floating Navigation Controls */
     .controls {
       position: fixed;
       bottom: 24px;
@@ -348,12 +348,10 @@
       background: var(--controls-bg);
       border: 1px solid var(--controls-border);
       backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
       padding: 8px 18px;
       border-radius: 9999px;
       z-index: 100;
       box-shadow: var(--controls-shadow);
-      transition: all 0.25s;
     }
 
     .btn {
@@ -372,11 +370,7 @@
       transition: all 0.2s;
     }
 
-    .btn:hover {
-      background: rgba(0, 0, 0, 0.08);
-      transform: translateY(-1px);
-    }
-
+    .btn:hover { background: rgba(0, 0, 0, 0.08); transform: translateY(-1px); }
     .btn.primary {
       background: var(--accent-blue);
       border: none;
@@ -384,16 +378,7 @@
       box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
     }
 
-    .btn.primary:hover {
-      background: #1d4ed8;
-    }
-
-    .dots-container {
-      display: flex;
-      gap: 8px;
-      padding: 0 8px;
-    }
-
+    .dots-container { display: flex; gap: 8px; padding: 0 8px; }
     .nav-dot {
       width: 10px;
       height: 10px;
@@ -402,27 +387,16 @@
       cursor: pointer;
       transition: all 0.25s;
     }
-
     .nav-dot.active {
       width: 26px;
       border-radius: 5px;
       background: var(--accent-blue);
     }
 
-    /* Print / PDF Styles */
     @media print {
-      body {
-        overflow: visible;
-        background: #ffffff !important;
-      }
-      .controls, .bg-mesh {
-        display: none !important;
-      }
-      .deck-container {
-        width: 100% !important;
-        height: auto !important;
-        max-width: none !important;
-      }
+      body { overflow: visible; background: #ffffff !important; }
+      .controls, .bg-mesh { display: none !important; }
+      .deck-container { width: 100% !important; height: auto !important; max-width: none !important; }
       .slide {
         position: relative !important;
         opacity: 1 !important;
@@ -442,14 +416,66 @@
 
   <div class="deck-container">
 
-    <!-- SLIDE 1: Problem Statement and Understanding -->
+    <!-- SLIDE 1: INTRODUCTION -->
     <div class="slide active" id="slide-1">
       <div class="slide-header">
         <div class="slide-badge-row">
-          <div class="slide-badge"><span class="dot"></span> Mandatory Slide 01 &bull; Vecnaverse 2026 &bull; Team: Shivanand Varpe, Suraj Vyavhare, Pranay Shinde</div>
-          <div class="slide-counter">01 / 05</div>
+          <div class="slide-badge"><span class="dot"></span> Slide 01 &bull; Team Profile &amp; Project Info</div>
+          <div class="slide-counter">01 / 06</div>
         </div>
-        <h1 class="slide-title">Problem Statement and Understanding</h1>
+        <h1 class="slide-title">Introduction &amp; Team Profile</h1>
+        <p class="slide-subtitle">Hyperlocal Community &amp; Tech Event Discovery Engine with Zero Infrastructure Cost</p>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-top-accent" style="background: var(--accent-blue);"></div>
+          <h2 class="card-title">Project Details</h2>
+          <ul class="card-list">
+            <li><strong>Problem Statement (PS) Title:</strong><br>Hyperlocal Event Discovery Platform (Event Radar)</li>
+            <li><strong>Domain:</strong><br>Location-Based Services (LBS), Geospatial Systems &amp; Modern Web Applications</li>
+            <li><strong>Live Deployed URL:</strong><br><a href="https://eventradar-mu.vercel.app" target="_blank" style="color: var(--accent-blue); text-decoration: underline;">https://eventradar-mu.vercel.app</a></li>
+            <li><strong>Core Value Proposition:</strong><br>Zero-cost Google Maps Link Parser + Supabase PostGIS spatial engine for sub-50ms neighborhood discovery.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-top-accent" style="background: var(--accent-purple);"></div>
+          <h2 class="card-title">Team Profile</h2>
+          <ul class="card-list">
+            <li><strong>Team Name:</strong> VP Boys</li>
+            <li><strong>Leader Name:</strong> Shivanand Ramhari Varpe (Full-Stack &amp; Frontend Lead)</li>
+            <li><strong>Team Members:</strong>
+              <div style="margin-top: 6px; display: flex; flex-direction: column; gap: 4px;">
+                <span>1. <strong>Shivanand Ramhari Varpe</strong> (Full-Stack Lead)</span>
+                <span>2. <strong>Suraj Rahul Vyavahare</strong> (Backend &amp; Database Architecture)</span>
+                <span>3. <strong>Pranay Anil Shinde</strong> (Research, Testing &amp; System Design)</span>
+              </div>
+            </li>
+          </ul>
+
+          <div class="links-row">
+            <a href="https://github.com/Shivanand-Varpe/GeoGuild" target="_blank" class="link-btn github">
+              <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+              GitHub Repository &#8599;
+            </a>
+            <a href="https://youtu.be/EventRadar-Demo" target="_blank" class="link-btn youtube">
+              <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+              Video Demo Link &#8599;
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: Problem Statement and Understanding -->
+    <div class="slide" id="slide-2">
+      <div class="slide-header">
+        <div class="slide-badge-row">
+          <div class="slide-badge"><span class="dot"></span> Slide 02 &bull; Problem Understanding</div>
+          <div class="slide-counter">02 / 06</div>
+        </div>
+        <h1 class="slide-title">Problem Statement &amp; Understanding</h1>
         <p class="slide-subtitle">India's urban centers house millions of tech builders, yet grassroots event discovery remains broken and fragmented.</p>
       </div>
 
@@ -488,12 +514,12 @@
       </div>
     </div>
 
-    <!-- SLIDE 2: Technical Approach -->
-    <div class="slide" id="slide-2">
+    <!-- SLIDE 3: Technical Approach -->
+    <div class="slide" id="slide-3">
       <div class="slide-header">
         <div class="slide-badge-row">
-          <div class="slide-badge"><span class="dot"></span> Mandatory Slide 02 &bull; Architecture</div>
-          <div class="slide-counter">02 / 05</div>
+          <div class="slide-badge"><span class="dot"></span> Slide 03 &bull; Architecture</div>
+          <div class="slide-counter">03 / 06</div>
         </div>
         <h1 class="slide-title">Technical Approach</h1>
         <p class="slide-subtitle">A modern, scalable architecture coupling Next.js 14 App Router with Supabase's PostGIS spatial calculation engine.</p>
@@ -502,11 +528,11 @@
       <div class="grid-4">
         <div class="card">
           <div class="card-top-accent" style="background: var(--accent-blue);"></div>
-          <h2 class="card-title">Frontend & Apple HIG</h2>
+          <h2 class="card-title">Frontend &amp; Apple HIG</h2>
           <ul class="card-list">
             <li>Next.js 14 App Router + TypeScript + Tailwind CSS v4.</li>
             <li>Apple HIG tactile craft: clean porcelain styling, glassmorphism accents, spring physics.</li>
-            <li>Dual Light & Dark modes with WCAG AAA contrast compliance.</li>
+            <li>Dual Light &amp; Dark modes with WCAG AAA contrast compliance.</li>
             <li>Browser Geolocation + Haversine distance computations.</li>
           </ul>
         </div>
@@ -516,7 +542,7 @@
           <h2 class="card-title">PostGIS Spatial Engine</h2>
           <ul class="card-list">
             <li>Supabase PostgreSQL with native PostGIS spatial extension.</li>
-            <li>Stored procedure <code>get_nearby_events</code> using <code>ST_DWithin</code> & <code>ST_Distance</code>.</li>
+            <li>Stored procedure <code>get_nearby_events</code> using <code>ST_DWithin</code> &amp; <code>ST_Distance</code>.</li>
             <li>GiST spatial indexes on <code>geography(Point, 4326)</code> for sub-50ms spatial lookups.</li>
             <li>Pre-seeded coordinate anchors for 5 major Indian metros.</li>
           </ul>
@@ -535,25 +561,25 @@
 
         <div class="card">
           <div class="card-top-accent" style="background: var(--accent-purple);"></div>
-          <h2 class="card-title">Auth & Real Checkout</h2>
+          <h2 class="card-title">Auth &amp; Real Payments</h2>
           <ul class="card-list">
             <li>Real Supabase Auth (Email OTP, Password, OAuth).</li>
             <li>Row-Level Security (RLS) policies protecting RSVPs, events, and community walls.</li>
             <li>Apple-styled payment checkout supporting UPI, Cards, and Netbanking.</li>
-            <li>Instant QR Digital Ticket generation & calendar exports (.ics / Google).</li>
+            <li>Instant QR Digital Ticket generation &amp; calendar exports (.ics / Google).</li>
           </ul>
         </div>
       </div>
     </div>
 
-    <!-- SLIDE 3: Feasibility & Viability -->
-    <div class="slide" id="slide-3">
+    <!-- SLIDE 4: Feasibility & Viability -->
+    <div class="slide" id="slide-4">
       <div class="slide-header">
         <div class="slide-badge-row">
-          <div class="slide-badge"><span class="dot"></span> Mandatory Slide 03 &bull; Business & Tech</div>
-          <div class="slide-counter">03 / 05</div>
+          <div class="slide-badge"><span class="dot"></span> Slide 04 &bull; Business &amp; Tech</div>
+          <div class="slide-counter">04 / 06</div>
         </div>
-        <h1 class="slide-title">Feasibility & Viability</h1>
+        <h1 class="slide-title">Feasibility &amp; Viability</h1>
         <p class="slide-subtitle">100% Free-tier operational footprint today, scalable to millions of users with robust, sustainable revenue streams.</p>
       </div>
 
@@ -582,7 +608,7 @@
 
         <div class="card">
           <div class="card-top-accent" style="background: var(--accent-purple);"></div>
-          <h2 class="card-title">Revenue & Sustainability</h2>
+          <h2 class="card-title">Revenue &amp; Sustainability</h2>
           <ul class="card-list">
             <li><strong>1. "Radar Boost" (Featured Pins):</strong> Promoted visibility for hackathons, tech conferences, and brand launches.</li>
             <li><strong>2. Ticketing Convenience Fee:</strong> Modest 2-3% platform fee on paid workshops and concerts via UPI.</li>
@@ -592,21 +618,21 @@
       </div>
     </div>
 
-    <!-- SLIDE 4: Impact & Benefit -->
-    <div class="slide" id="slide-4">
+    <!-- SLIDE 5: Impact & Benefit -->
+    <div class="slide" id="slide-5">
       <div class="slide-header">
         <div class="slide-badge-row">
-          <div class="slide-badge"><span class="dot"></span> Mandatory Slide 04 &bull; Community Impact</div>
-          <div class="slide-counter">04 / 05</div>
+          <div class="slide-badge"><span class="dot"></span> Slide 05 &bull; Community Impact</div>
+          <div class="slide-counter">05 / 06</div>
         </div>
-        <h1 class="slide-title">Impact & Benefit</h1>
+        <h1 class="slide-title">Impact &amp; Benefit</h1>
         <p class="slide-subtitle">Democratizing event access for 500M+ urban Indians and supercharging grassroots tech communities.</p>
       </div>
 
       <div class="grid-3">
         <div class="card">
           <div class="card-top-accent" style="background: var(--accent-cyan);"></div>
-          <h2 class="card-title">For Attendees & Builders</h2>
+          <h2 class="card-title">For Attendees &amp; Builders</h2>
           <ul class="card-list">
             <li><strong>Eliminates Local FOMO:</strong> Discovers hackathons, demo days, and jams happening within 5km of their exact location.</li>
             <li><strong>Saves Commute Hours:</strong> Stops users from spending 2 hours traversing congested metros for irrelevant gatherings.</li>
@@ -628,7 +654,7 @@
 
         <div class="card">
           <div class="card-top-accent" style="background: var(--accent-purple);"></div>
-          <h2 class="card-title">Societal & Urban Value</h2>
+          <h2 class="card-title">Societal &amp; Urban Value</h2>
           <ul class="card-list">
             <li><strong>Revitalizes Local Hubs:</strong> Channels footfall to local cafes, maker spaces, and co-working hubs.</li>
             <li><strong>Grassroots Serendipity:</strong> Fosters organic collaboration between student developers, founders, and creators.</li>
@@ -638,12 +664,12 @@
       </div>
     </div>
 
-    <!-- SLIDE 5: Comparison with Existing Platforms -->
-    <div class="slide" id="slide-5">
+    <!-- SLIDE 6: Comparison with Existing Platforms -->
+    <div class="slide" id="slide-6">
       <div class="slide-header">
         <div class="slide-badge-row">
-          <div class="slide-badge"><span class="dot"></span> Mandatory Slide 05 &bull; Competitive Edge</div>
-          <div class="slide-counter">05 / 05</div>
+          <div class="slide-badge"><span class="dot"></span> Slide 06 &bull; Competitive Edge</div>
+          <div class="slide-counter">06 / 06</div>
         </div>
         <h1 class="slide-title">Comparison with Existing Platforms</h1>
         <p class="slide-subtitle">How Event Radar fundamentally outclasses legacy directories across every key hyperlocal metric.</p>
@@ -697,7 +723,7 @@
               <td>Stripe / International</td>
             </tr>
             <tr>
-              <td><strong>Design & Experience</strong></td>
+              <td><strong>User Experience</strong></td>
               <td class="col-highlight"><strong>Apple HIG Clean Light</strong></td>
               <td>Dated Web 2.0 interface</td>
               <td>Heavy commercial advertisements</td>
@@ -727,6 +753,7 @@
       <div class="nav-dot" onclick="goToSlide(3)"></div>
       <div class="nav-dot" onclick="goToSlide(4)"></div>
       <div class="nav-dot" onclick="goToSlide(5)"></div>
+      <div class="nav-dot" onclick="goToSlide(6)"></div>
     </div>
 
     <button class="btn" id="next-btn" onclick="nextSlide()">Next &#8594;</button>
@@ -740,7 +767,7 @@
 
   <script>
     let currentSlide = 1;
-    const totalSlides = 5;
+    const totalSlides = 6;
 
     function updateSlides() {
       for (let i = 1; i <= totalSlides; i++) {
@@ -783,13 +810,12 @@
       document.getElementById('theme-btn').innerText = next === 'light' ? '☀️ Light' : '🌙 Dark';
     }
 
-    // Keyboard Shortcuts
     document.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
         nextSlide();
       } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
         prevSlide();
-      } else if (e.key >= '1' && e.key <= '5') {
+      } else if (e.key >= '1' && e.key <= '6') {
         goToSlide(parseInt(e.key));
       } else if (e.key === 't' || e.key === 'T') {
         toggleTheme();
