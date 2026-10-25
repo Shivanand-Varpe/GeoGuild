@@ -52,8 +52,8 @@ flowchart TD
 
 | Role | Team Member | Territory & Responsibilities |
 |---|---|---|
-| **Frontend Lead & UI** | **Person A** | Next.js App Router, shadcn/ui, Apple glassmorphism styling, responsive layout, EventCard, Explore filters, Event Details, RSVP flow, Community Wall, and Google Maps integration. |
-| **Backend & DB Lead** | **Person B** | Supabase setup, PostgreSQL schema, PostGIS spatial RPCs (`get_nearby_events`), Row Level Security (RLS) policies, and seed data. |
+| **Frontend Lead & UI** | **Shivanand Varpe** ([@Shivanand-Varpe](https://github.com/Shivanand-Varpe)) | Next.js App Router, shadcn/ui, Apple glassmorphism styling, responsive layout, EventCard, Explore filters, Event Details, RSVP flow, Community Wall, and Google Maps integration. |
+| **Backend & DB Lead** | **Samruddhi Varpe** ([@Samruddhi-varpe](https://github.com/Samruddhi-varpe)) | Supabase setup, PostgreSQL schema, PostGIS spatial RPCs (`get_nearby_events`), Row Level Security (RLS) policies, and seed data. |
 
 ---
 
@@ -124,7 +124,7 @@ event-radar/
 ### 2. Installation
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/event-radar.git
+git clone https://github.com/Shivanand-Varpe/GeoGuild.git
 cd event-radar
 
 # Install dependencies
