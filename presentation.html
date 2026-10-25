@@ -1,25 +1,74 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Event Radar — Pitch Deck (VECNAVERSE 2026)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
-    :root {
+    /* CSS Variables for Clean Light Theme (Default) and Dark Theme */
+    :root[data-theme="light"] {
+      --bg: #f8fafc;
+      --bg-gradient: radial-gradient(circle at 15% 15%, rgba(37, 99, 235, 0.05) 0%, transparent 45%),
+                      radial-gradient(circle at 85% 85%, rgba(124, 58, 237, 0.04) 0%, transparent 45%),
+                      radial-gradient(circle at 50% 50%, rgba(2, 132, 199, 0.03) 0%, transparent 50%);
+      --card-bg: #ffffff;
+      --card-border: rgba(0, 0, 0, 0.08);
+      --card-shadow: 0 16px 40px -12px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+      --inner-card-bg: #f8fafc;
+      --inner-card-border: rgba(0, 0, 0, 0.06);
+      --text: #0f172a;
+      --text-body: #334155;
+      --text-muted: #64748b;
+      --accent-blue: #2563eb;
+      --accent-cyan: #0284c7;
+      --accent-purple: #7c3aed;
+      --accent-green: #059669;
+      --accent-amber: #d97706;
+      --badge-bg: #eff6ff;
+      --badge-border: #bfdbfe;
+      --badge-text: #1d4ed8;
+      --table-header-bg: #f1f5f9;
+      --table-highlight-col: #eff6ff;
+      --table-highlight-text: #047857;
+      --killer-box-bg: #f0fdf4;
+      --killer-box-border: #bbf7d0;
+      --controls-bg: rgba(255, 255, 255, 0.9);
+      --controls-border: rgba(0, 0, 0, 0.1);
+      --controls-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    :root[data-theme="dark"] {
       --bg: #07090e;
+      --bg-gradient: radial-gradient(circle at 15% 20%, rgba(59, 130, 246, 0.12) 0%, transparent 40%),
+                      radial-gradient(circle at 85% 80%, rgba(168, 85, 247, 0.12) 0%, transparent 40%),
+                      radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.06) 0%, transparent 50%);
       --card-bg: rgba(22, 28, 45, 0.7);
       --card-border: rgba(255, 255, 255, 0.08);
+      --card-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7);
+      --inner-card-bg: rgba(15, 23, 42, 0.6);
+      --inner-card-border: rgba(255, 255, 255, 0.06);
       --text: #f8fafc;
+      --text-body: #cbd5e1;
       --text-muted: #94a3b8;
       --accent-blue: #3b82f6;
       --accent-cyan: #06b6d4;
       --accent-purple: #a855f7;
       --accent-green: #10b981;
       --accent-amber: #f59e0b;
-      --glow: rgba(59, 130, 246, 0.15);
+      --badge-bg: rgba(6, 182, 212, 0.12);
+      --badge-border: rgba(6, 182, 212, 0.3);
+      --badge-text: #06b6d4;
+      --table-header-bg: rgba(30, 41, 59, 0.8);
+      --table-highlight-col: rgba(59, 130, 246, 0.12);
+      --table-highlight-text: #34d399;
+      --killer-box-bg: linear-gradient(90deg, rgba(30, 58, 138, 0.3) 0%, rgba(88, 28, 135, 0.3) 100%);
+      --killer-box-border: rgba(96, 165, 250, 0.3);
+      --controls-bg: rgba(15, 23, 42, 0.85);
+      --controls-border: rgba(255, 255, 255, 0.1);
+      --controls-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     }
 
     * {
@@ -39,27 +88,24 @@
       justify-content: center;
       overflow: hidden;
       user-select: none;
+      transition: background-color 0.3s ease, color 0.3s ease;
     }
 
-    /* Background Ambient Mesh */
     .bg-mesh {
       position: fixed;
       inset: 0;
       pointer-events: none;
       z-index: 0;
-      background: 
-        radial-gradient(circle at 15% 20%, rgba(59, 130, 246, 0.12) 0%, transparent 40%),
-        radial-gradient(circle at 85% 80%, rgba(168, 85, 247, 0.12) 0%, transparent 40%),
-        radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.06) 0%, transparent 50%);
+      background: var(--bg-gradient);
     }
 
-    /* Slide Container */
+    /* Deck Container (16:9 aspect) */
     .deck-container {
       position: relative;
       z-index: 1;
       width: 94vw;
-      max-width: 1400px;
-      height: 84vh;
+      max-width: 1380px;
+      height: 85vh;
       max-height: 820px;
       perspective: 1200px;
     }
@@ -69,17 +115,15 @@
       inset: 0;
       background: var(--card-bg);
       border: 1px solid var(--card-border);
-      backdrop-filter: blur(28px) saturate(190%);
-      -webkit-backdrop-filter: blur(28px) saturate(190%);
-      border-radius: 28px;
-      padding: 48px 56px;
+      border-radius: 24px;
+      padding: 44px 52px;
       display: flex;
       flex-direction: column;
       opacity: 0;
       visibility: hidden;
-      transform: translateY(20px) scale(0.98);
-      transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      transform: translateY(16px) scale(0.985);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: var(--card-shadow);
     }
 
     .slide.active {
@@ -90,14 +134,14 @@
 
     /* Slide Header */
     .slide-header {
-      margin-bottom: 32px;
+      margin-bottom: 28px;
     }
 
     .slide-badge-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
     .slide-badge {
@@ -106,12 +150,12 @@
       gap: 8px;
       padding: 4px 14px;
       border-radius: 9999px;
-      background: rgba(6, 182, 212, 0.12);
-      border: 1px solid rgba(6, 182, 212, 0.3);
-      color: var(--accent-cyan);
+      background: var(--badge-bg);
+      border: 1px solid var(--badge-border);
+      color: var(--badge-text);
       font-size: 0.75rem;
       font-weight: 700;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.06em;
       text-transform: uppercase;
       font-family: 'JetBrains Mono', monospace;
     }
@@ -120,82 +164,75 @@
       width: 6px;
       height: 6px;
       border-radius: 50%;
-      background: var(--accent-cyan);
-      box-shadow: 0 0 8px var(--accent-cyan);
+      background: currentColor;
     }
 
     .slide-counter {
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.85rem;
+      font-weight: 600;
       color: var(--text-muted);
     }
 
     .slide-title {
-      font-size: 2.2rem;
+      font-size: 2.15rem;
       font-weight: 800;
       letter-spacing: -0.03em;
       line-height: 1.15;
-      background: linear-gradient(180deg, #ffffff 30%, #cbd5e1 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: var(--text);
     }
 
     .slide-subtitle {
-      font-size: 1rem;
+      font-size: 0.98rem;
       color: var(--text-muted);
       margin-top: 6px;
       font-weight: 400;
+      line-height: 1.45;
     }
 
-    /* Slide Content Grids */
+    /* Layout Grids */
     .grid-3 {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 24px;
+      gap: 22px;
       flex: 1;
     }
 
     .grid-4 {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 20px;
+      gap: 18px;
       flex: 1;
     }
 
     .card {
-      background: rgba(15, 23, 42, 0.6);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 20px;
+      background: var(--inner-card-bg);
+      border: 1px solid var(--inner-card-border);
+      border-radius: 18px;
       padding: 24px 22px;
       display: flex;
       flex-direction: column;
       position: relative;
-      overflow: hidden;
-      transition: border-color 0.25s, transform 0.25s;
+      transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
     }
 
     .card:hover {
-      border-color: rgba(255, 255, 255, 0.15);
       transform: translateY(-2px);
+      box-shadow: 0 10px 24px -6px rgba(0, 0, 0, 0.06);
     }
 
-    .card-icon {
-      width: 42px;
-      height: 42px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .card-top-accent {
+      width: 38px;
+      height: 4px;
+      border-radius: 2px;
       margin-bottom: 16px;
-      font-size: 1.25rem;
-      font-weight: 700;
     }
 
     .card-title {
       font-size: 1.15rem;
       font-weight: 700;
       margin-bottom: 12px;
-      color: #ffffff;
+      color: var(--text);
       letter-spacing: -0.01em;
     }
 
@@ -208,29 +245,33 @@
     }
 
     .card-list li {
-      font-size: 0.88rem;
-      color: #cbd5e1;
+      font-size: 0.875rem;
+      color: var(--text-body);
       line-height: 1.5;
       display: flex;
       align-items: flex-start;
       gap: 8px;
     }
 
+    .card-list li strong {
+      color: var(--text);
+    }
+
     .card-list li::before {
       content: "•";
-      color: var(--accent-cyan);
+      color: var(--accent-blue);
       font-size: 1.1rem;
       line-height: 1.2;
     }
 
-    /* Slide 5 Table Styles */
+    /* Slide 5 Table */
     .table-container {
       width: 100%;
-      border-radius: 16px;
+      border-radius: 14px;
       overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      background: rgba(15, 23, 42, 0.5);
-      margin-bottom: 20px;
+      border: 1px solid var(--inner-card-border);
+      background: var(--card-bg);
+      margin-bottom: 18px;
     }
 
     table {
@@ -245,32 +286,30 @@
     }
 
     th {
-      background: rgba(30, 41, 59, 0.8);
-      color: #e2e8f0;
+      background: var(--table-header-bg);
+      color: var(--text);
       font-weight: 700;
       letter-spacing: 0.02em;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      border-bottom: 1px solid var(--inner-card-border);
     }
 
     th.col-highlight, td.col-highlight {
-      background: rgba(59, 130, 246, 0.12);
-      border-left: 1px solid rgba(59, 130, 246, 0.3);
-      border-right: 1px solid rgba(59, 130, 246, 0.3);
+      background: var(--table-highlight-col);
     }
 
     td.col-highlight {
-      color: #34d399;
-      font-weight: 600;
+      color: var(--table-highlight-text);
+      font-weight: 700;
     }
 
     tr:not(:last-child) td {
-      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      border-bottom: 1px solid var(--inner-card-border);
     }
 
     .killer-box {
-      background: linear-gradient(90deg, rgba(30, 58, 138, 0.3) 0%, rgba(88, 28, 135, 0.3) 100%);
-      border: 1px solid rgba(96, 165, 250, 0.3);
-      border-radius: 16px;
+      background: var(--killer-box-bg);
+      border: 1px solid var(--killer-box-border);
+      border-radius: 14px;
       padding: 16px 20px;
       display: flex;
       align-items: center;
@@ -278,10 +317,10 @@
     }
 
     .killer-badge {
-      padding: 6px 12px;
-      border-radius: 8px;
+      padding: 5px 12px;
+      border-radius: 6px;
       background: var(--accent-cyan);
-      color: #04101f;
+      color: #ffffff;
       font-weight: 800;
       font-size: 0.75rem;
       letter-spacing: 0.04em;
@@ -291,29 +330,35 @@
 
     .killer-text {
       font-size: 0.88rem;
-      color: #f1f5f9;
+      color: var(--text-body);
       line-height: 1.45;
     }
 
-    /* Controls Bar */
+    .killer-text strong {
+      color: var(--text);
+    }
+
+    /* Floating Navigation Controls */
     .controls {
       position: fixed;
       bottom: 24px;
       display: flex;
       align-items: center;
-      gap: 16px;
-      background: rgba(15, 23, 42, 0.85);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      gap: 12px;
+      background: var(--controls-bg);
+      border: 1px solid var(--controls-border);
       backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
       padding: 8px 18px;
       border-radius: 9999px;
       z-index: 100;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      box-shadow: var(--controls-shadow);
+      transition: all 0.25s;
     }
 
     .btn {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(0, 0, 0, 0.04);
+      border: 1px solid var(--controls-border);
       color: var(--text);
       font-family: inherit;
       font-size: 0.82rem;
@@ -328,16 +373,19 @@
     }
 
     .btn:hover {
-      background: rgba(255, 255, 255, 0.18);
-      border-color: rgba(255, 255, 255, 0.3);
+      background: rgba(0, 0, 0, 0.08);
       transform: translateY(-1px);
     }
 
     .btn.primary {
-      background: linear-gradient(135deg, var(--accent-blue) 0%, #2563eb 100%);
+      background: var(--accent-blue);
       border: none;
-      color: #fff;
-      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    }
+
+    .btn.primary:hover {
+      background: #1d4ed8;
     }
 
     .dots-container {
@@ -350,7 +398,7 @@
       width: 10px;
       height: 10px;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.2);
+      background: rgba(100, 116, 139, 0.25);
       cursor: pointer;
       transition: all 0.25s;
     }
@@ -358,15 +406,14 @@
     .nav-dot.active {
       width: 26px;
       border-radius: 5px;
-      background: var(--accent-cyan);
-      box-shadow: 0 0 10px var(--accent-cyan);
+      background: var(--accent-blue);
     }
 
     /* Print / PDF Styles */
     @media print {
       body {
         overflow: visible;
-        background: #0b0f19;
+        background: #ffffff !important;
       }
       .controls, .bg-mesh {
         display: none !important;
@@ -384,6 +431,8 @@
         page-break-after: always;
         height: 100vh;
         margin-bottom: 20px;
+        box-shadow: none !important;
+        border: 1px solid #e2e8f0 !important;
       }
     }
   </style>
@@ -393,7 +442,7 @@
 
   <div class="deck-container">
 
-    <!-- SLIDE 1 -->
+    <!-- SLIDE 1: Problem Statement and Understanding -->
     <div class="slide active" id="slide-1">
       <div class="slide-header">
         <div class="slide-badge-row">
@@ -406,8 +455,8 @@
 
       <div class="grid-3">
         <div class="card">
-          <div class="card-icon" style="background: rgba(168, 85, 247, 0.15); color: var(--accent-purple);">01</div>
-          <h2 class="card-title">Fragmented Discovery</h2>
+          <div class="card-top-accent" style="background: var(--accent-purple);"></div>
+          <h2 class="card-title">1. Fragmented Discovery</h2>
           <ul class="card-list">
             <li><strong>Trapped in Silos:</strong> 85%+ of tech meetups, hackathons, and cultural jams live in closed WhatsApp groups or ephemeral Instagram stories.</li>
             <li><strong>Zero Central Hub:</strong> No single platform tracks grassroots, community-driven gatherings.</li>
@@ -417,8 +466,8 @@
         </div>
 
         <div class="card">
-          <div class="card-icon" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan);">02</div>
-          <h2 class="card-title">The "Hyperlocal" Void</h2>
+          <div class="card-top-accent" style="background: var(--accent-cyan);"></div>
+          <h2 class="card-title">2. The "Hyperlocal" Void</h2>
           <ul class="card-list">
             <li><strong>City-Wide Is Broken:</strong> Legacy platforms list events for an entire metro (e.g. "Mumbai" or "Bengaluru").</li>
             <li><strong>Transit Nightmare:</strong> An event 35 km away across town is practically inaccessible during peak traffic hours.</li>
@@ -428,8 +477,8 @@
         </div>
 
         <div class="card">
-          <div class="card-icon" style="background: rgba(59, 130, 246, 0.15); color: var(--accent-blue);">03</div>
-          <h2 class="card-title">High Organizer Friction</h2>
+          <div class="card-top-accent" style="background: var(--accent-blue);"></div>
+          <h2 class="card-title">3. High Organizer Friction</h2>
           <ul class="card-list">
             <li><strong>Hostile Setup:</strong> Legacy platforms demand coordinate lookups, lengthy approval queues, or steep monthly fees ($35+/mo).</li>
             <li><strong>Costly API Traps:</strong> Commercial map APIs (Mapbox, Google Maps SDK) force unsustainable fees on free events.</li>
@@ -439,7 +488,7 @@
       </div>
     </div>
 
-    <!-- SLIDE 2 -->
+    <!-- SLIDE 2: Technical Approach -->
     <div class="slide" id="slide-2">
       <div class="slide-header">
         <div class="slide-badge-row">
@@ -452,18 +501,18 @@
 
       <div class="grid-4">
         <div class="card">
-          <div class="card-icon" style="background: rgba(59, 130, 246, 0.15); color: var(--accent-blue);">UI</div>
+          <div class="card-top-accent" style="background: var(--accent-blue);"></div>
           <h2 class="card-title">Frontend & Apple HIG</h2>
           <ul class="card-list">
             <li>Next.js 14 App Router + TypeScript + Tailwind CSS v4.</li>
-            <li>Apple HIG tactile craft: glassmorphism (24px blur), spring physics micro-interactions.</li>
+            <li>Apple HIG tactile craft: clean porcelain styling, glassmorphism accents, spring physics.</li>
             <li>Dual Light & Dark modes with WCAG AAA contrast compliance.</li>
             <li>Browser Geolocation + Haversine distance computations.</li>
           </ul>
         </div>
 
         <div class="card">
-          <div class="card-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-green);">DB</div>
+          <div class="card-top-accent" style="background: var(--accent-green);"></div>
           <h2 class="card-title">PostGIS Spatial Engine</h2>
           <ul class="card-list">
             <li>Supabase PostgreSQL with native PostGIS spatial extension.</li>
@@ -474,7 +523,7 @@
         </div>
 
         <div class="card">
-          <div class="card-icon" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan);">MAP</div>
+          <div class="card-top-accent" style="background: var(--accent-cyan);"></div>
           <h2 class="card-title">Maps Link Parser</h2>
           <ul class="card-list">
             <li>Proprietary URL extractor in <code>lib/maps.ts</code>.</li>
@@ -485,7 +534,7 @@
         </div>
 
         <div class="card">
-          <div class="card-icon" style="background: rgba(168, 85, 247, 0.15); color: var(--accent-purple);">SEC</div>
+          <div class="card-top-accent" style="background: var(--accent-purple);"></div>
           <h2 class="card-title">Auth & Real Checkout</h2>
           <ul class="card-list">
             <li>Real Supabase Auth (Email OTP, Password, OAuth).</li>
@@ -497,7 +546,7 @@
       </div>
     </div>
 
-    <!-- SLIDE 3 -->
+    <!-- SLIDE 3: Feasibility & Viability -->
     <div class="slide" id="slide-3">
       <div class="slide-header">
         <div class="slide-badge-row">
@@ -510,7 +559,7 @@
 
       <div class="grid-3">
         <div class="card">
-          <div class="card-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-green);">₹0</div>
+          <div class="card-top-accent" style="background: var(--accent-green);"></div>
           <h2 class="card-title">Zero Infrastructure Burn</h2>
           <ul class="card-list">
             <li><strong>100% Free-Tier Stack:</strong> Supabase Free Tier (PostgreSQL + PostGIS) + Vercel Edge Serverless hosting.</li>
@@ -521,7 +570,7 @@
         </div>
 
         <div class="card">
-          <div class="card-icon" style="background: rgba(59, 130, 246, 0.15); color: var(--accent-blue);">100x</div>
+          <div class="card-top-accent" style="background: var(--accent-blue);"></div>
           <h2 class="card-title">Technical Scalability</h2>
           <ul class="card-list">
             <li><strong>PostGIS Spatial Indexing:</strong> GiST bounding-box indexes enable O(log N) searches over 500,000+ localized events.</li>
@@ -532,7 +581,7 @@
         </div>
 
         <div class="card">
-          <div class="card-icon" style="background: rgba(168, 85, 247, 0.15); color: var(--accent-purple);">$$</div>
+          <div class="card-top-accent" style="background: var(--accent-purple);"></div>
           <h2 class="card-title">Revenue & Sustainability</h2>
           <ul class="card-list">
             <li><strong>1. "Radar Boost" (Featured Pins):</strong> Promoted visibility for hackathons, tech conferences, and brand launches.</li>
@@ -543,7 +592,7 @@
       </div>
     </div>
 
-    <!-- SLIDE 4 -->
+    <!-- SLIDE 4: Impact & Benefit -->
     <div class="slide" id="slide-4">
       <div class="slide-header">
         <div class="slide-badge-row">
@@ -556,7 +605,7 @@
 
       <div class="grid-3">
         <div class="card">
-          <div class="card-icon" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan);">🚀</div>
+          <div class="card-top-accent" style="background: var(--accent-cyan);"></div>
           <h2 class="card-title">For Attendees & Builders</h2>
           <ul class="card-list">
             <li><strong>Eliminates Local FOMO:</strong> Discovers hackathons, demo days, and jams happening within 5km of their exact location.</li>
@@ -567,7 +616,7 @@
         </div>
 
         <div class="card">
-          <div class="card-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-green);">⚡</div>
+          <div class="card-top-accent" style="background: var(--accent-green);"></div>
           <h2 class="card-title">For Community Organizers</h2>
           <ul class="card-list">
             <li><strong>Sub-60s Publishing:</strong> Drop a title and paste a Google Maps link. No manual lat/lng lookups or complex forms.</li>
@@ -578,7 +627,7 @@
         </div>
 
         <div class="card">
-          <div class="card-icon" style="background: rgba(168, 85, 247, 0.15); color: var(--accent-purple);">🌐</div>
+          <div class="card-top-accent" style="background: var(--accent-purple);"></div>
           <h2 class="card-title">Societal & Urban Value</h2>
           <ul class="card-list">
             <li><strong>Revitalizes Local Hubs:</strong> Channels footfall to local cafes, maker spaces, and co-working hubs.</li>
@@ -589,7 +638,7 @@
       </div>
     </div>
 
-    <!-- SLIDE 5 -->
+    <!-- SLIDE 5: Comparison with Existing Platforms -->
     <div class="slide" id="slide-5">
       <div class="slide-header">
         <div class="slide-badge-row">
@@ -604,7 +653,7 @@
         <table>
           <thead>
             <tr>
-              <th>Feature</th>
+              <th>Feature Dimension</th>
               <th class="col-highlight">Event Radar (Ours)</th>
               <th>Meetup.com</th>
               <th>BookMyShow</th>
@@ -630,7 +679,7 @@
               <td><strong>Creation Speed</strong></td>
               <td class="col-highlight"><strong>&lt; 60s (Paste Maps link)</strong></td>
               <td>Complex multi-step wizard</td>
-              <td>Lengthy partner verification</td>
+              <td>Lengthy partner review</td>
               <td>Multi-page configuration</td>
             </tr>
             <tr>
@@ -649,7 +698,7 @@
             </tr>
             <tr>
               <td><strong>Design & Experience</strong></td>
-              <td class="col-highlight"><strong>Apple HIG Glassmorphism</strong></td>
+              <td class="col-highlight"><strong>Apple HIG Clean Light</strong></td>
               <td>Dated Web 2.0 interface</td>
               <td>Heavy commercial advertisements</td>
               <td>Generic corporate UI</td>
@@ -681,6 +730,11 @@
     </div>
 
     <button class="btn" id="next-btn" onclick="nextSlide()">Next &#8594;</button>
+    
+    <button class="btn" onclick="toggleTheme()" id="theme-btn" title="Toggle Light/Dark Theme">
+      ☀️ Light
+    </button>
+    
     <button class="btn primary" onclick="window.print()">Print / Export PDF</button>
   </div>
 
@@ -721,6 +775,14 @@
       updateSlides();
     }
 
+    function toggleTheme() {
+      const html = document.documentElement;
+      const current = html.getAttribute('data-theme') || 'light';
+      const next = current === 'light' ? 'dark' : 'light';
+      html.setAttribute('data-theme', next);
+      document.getElementById('theme-btn').innerText = next === 'light' ? '☀️ Light' : '🌙 Dark';
+    }
+
     // Keyboard Shortcuts
     document.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
@@ -729,6 +791,8 @@
         prevSlide();
       } else if (e.key >= '1' && e.key <= '5') {
         goToSlide(parseInt(e.key));
+      } else if (e.key === 't' || e.key === 'T') {
+        toggleTheme();
       }
     });
   </script>
