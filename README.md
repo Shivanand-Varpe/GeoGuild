@@ -52,8 +52,9 @@ flowchart TD
 
 | Role | Team Member | Territory & Responsibilities |
 |---|---|---|
-| **Frontend Lead & UI** | **Shivanand Varpe** ([@Shivanand-Varpe](https://github.com/Shivanand-Varpe)) | Next.js App Router, shadcn/ui, Apple glassmorphism styling, responsive layout, EventCard, Explore filters, Event Details, RSVP flow, Community Wall, and Google Maps integration. |
-| **Backend & DB Lead** | **Samruddhi Varpe** ([@Samruddhi-varpe](https://github.com/Samruddhi-varpe)) | Supabase setup, PostgreSQL schema, PostGIS spatial RPCs (`get_nearby_events`), Row Level Security (RLS) policies, and seed data. |
+| **Member A: Frontend Lead & UI** | **Shivanand Ramhari Varpe** ([@Shivanand-Varpe](https://github.com/Shivanand-Varpe)) | Next.js App Router, shadcn/ui, Apple glassmorphism styling, responsive layout, EventCard, Explore filters, Event Details, RSVP flow, Community Wall, and Google Maps integration. |
+| **Member B: Backend Lead & DB** | **Suraj Rahul Vyavhare** | Supabase PostgreSQL schema, PostGIS spatial indexing & RPCs (`get_nearby_events`), Row Level Security (RLS) policies, Realtime, Storage buckets, and seed data. |
+| **Member C: System Design & QA** | **Pranay Anil Shinde** | System architecture & design, end-to-end feature verification & QA, Vercel production deployment, interactive presentation PPT/deck, and product demo video. |
 
 ---
 
@@ -168,4 +169,4 @@ npm run build
 
 ---
 
-*Built with ❤️ during the VECNAVERSE 24-Hour Hackathon 2026.*
+*Built with ❤️ by **Shivanand Ramhari Varpe**, **Suraj Rahul Vyavhare**, and **Pranay Anil Shinde** for the VECNAVERSE 24-Hour Hackathon 2026.*
