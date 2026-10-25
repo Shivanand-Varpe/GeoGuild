@@ -330,21 +330,28 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
     ) {
       try {
         const supabase = createClient();
+        const endTimeIso =
+          eventData.end_time ||
+          new Date(new Date(eventData.start_time).getTime() + 3 * 3600 * 1000).toISOString();
+
         supabase
           .from('events')
           .insert({
             title: eventData.title,
             description: eventData.description,
-            city: eventData.city,
+            city: eventData.city === 'Bengaluru' ? 'Bangalore' : eventData.city,
             address: eventData.address,
+            venue_name: eventData.address,
             latitude: eventData.latitude,
             longitude: eventData.longitude,
             start_time: eventData.start_time,
+            end_time: endTimeIso,
             is_free: eventData.is_free,
             price: eventData.price || 0,
             max_capacity: eventData.max_capacity || 150,
             image_url: eventData.image_url,
             registration_link: eventData.google_maps_url || null,
+            organizer_id: user?.id || null,
             status: 'published',
           })
           .then(({ error }) => {
