@@ -102,7 +102,7 @@ export function Footer() {
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1 text-muted-foreground">
               Built with <Heart className="h-3.5 w-3.5 text-rose-500 fill-rose-500" /> for
-              <strong className="text-foreground ml-1">VECNAVERSE 24-hr Hackathon</strong>
+              <strong className="text-foreground ml-1">Team GeoGuild</strong> (Shivanand, Suraj, Pranay) for <strong className="text-foreground ml-1">VECNAVERSE</strong>
             </span>
             <a
               href="https://google.com/maps"
