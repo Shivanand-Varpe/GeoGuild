@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Event Radar — Pitch Deck (VECNAVERSE 2026)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07090e;
+      --card-bg: rgba(22, 28, 45, 0.7);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-blue: #3b82f6;
+      --accent-cyan: #06b6d4;
+      --accent-purple: #a855f7;
+      --accent-green: #10b981;
+      --accent-amber: #f59e0b;
+      --glow: rgba(59, 130, 246, 0.15);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* Background Ambient Mesh */
+    .bg-mesh {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background: 
+        radial-gradient(circle at 15% 20%, rgba(59, 130, 246, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 85% 80%, rgba(168, 85, 247, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.06) 0%, transparent 50%);
+    }
+
+    /* Slide Container */
+    .deck-container {
+      position: relative;
+      z-index: 1;
+      width: 94vw;
+      max-width: 1400px;
+      height: 84vh;
+      max-height: 820px;
+      perspective: 1200px;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(28px) saturate(190%);
+      -webkit-backdrop-filter: blur(28px) saturate(190%);
+      border-radius: 28px;
+      padding: 48px 56px;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(20px) scale(0.98);
+      transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0) scale(1);
+    }
+
+    /* Slide Header */
+    .slide-header {
+      margin-bottom: 32px;
+    }
+
+    .slide-badge-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .slide-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 14px;
+      border-radius: 9999px;
+      background: rgba(6, 182, 212, 0.12);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      color: var(--accent-cyan);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .slide-badge .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent-cyan);
+      box-shadow: 0 0 8px var(--accent-cyan);
+    }
+
+    .slide-counter {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .slide-title {
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      background: linear-gradient(180deg, #ffffff 30%, #cbd5e1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .slide-subtitle {
+      font-size: 1rem;
+      color: var(--text-muted);
+      margin-top: 6px;
+      font-weight: 400;
+    }
+
+    /* Slide Content Grids */
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      flex: 1;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      flex: 1;
+    }
+
+    .card {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 20px;
+      padding: 24px 22px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.25s, transform 0.25s;
+    }
+
+    .card:hover {
+      border-color: rgba(255, 255, 255, 0.15);
+      transform: translateY(-2px);
+    }
+
+    .card-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    .card-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: #ffffff;
+      letter-spacing: -0.01em;
+    }
+
+    .card-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1;
+    }
+
+    .card-list li {
+      font-size: 0.88rem;
+      color: #cbd5e1;
+      line-height: 1.5;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .card-list li::before {
+      content: "•";
+      color: var(--accent-cyan);
+      font-size: 1.1rem;
+      line-height: 1.2;
+    }
+
+    /* Slide 5 Table Styles */
+    .table-container {
+      width: 100%;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(15, 23, 42, 0.5);
+      margin-bottom: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    th, td {
+      padding: 12px 18px;
+      font-size: 0.85rem;
+    }
+
+    th {
+      background: rgba(30, 41, 59, 0.8);
+      color: #e2e8f0;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    th.col-highlight, td.col-highlight {
+      background: rgba(59, 130, 246, 0.12);
+      border-left: 1px solid rgba(59, 130, 246, 0.3);
+      border-right: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    td.col-highlight {
+      color: #34d399;
+      font-weight: 600;
+    }
+
+    tr:not(:last-child) td {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .killer-box {
+      background: linear-gradient(90deg, rgba(30, 58, 138, 0.3) 0%, rgba(88, 28, 135, 0.3) 100%);
+      border: 1px solid rgba(96, 165, 250, 0.3);
+      border-radius: 16px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .killer-badge {
+      padding: 6px 12px;
+      border-radius: 8px;
+      background: var(--accent-cyan);
+      color: #04101f;
+      font-weight: 800;
+      font-size: 0.75rem;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+      text-transform: uppercase;
+    }
+
+    .killer-text {
+      font-size: 0.88rem;
+      color: #f1f5f9;
+      line-height: 1.45;
+    }
+
+    /* Controls Bar */
+    .controls {
+      position: fixed;
+      bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(16px);
+      padding: 8px 18px;
+      border-radius: 9999px;
+      z-index: 100;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 9999px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.18);
+      border-color: rgba(255, 255, 255, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .btn.primary {
+      background: linear-gradient(135deg, var(--accent-blue) 0%, #2563eb 100%);
+      border: none;
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+    }
+
+    .dots-container {
+      display: flex;
+      gap: 8px;
+      padding: 0 8px;
+    }
+
+    .nav-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      cursor: pointer;
+      transition: all 0.25s;
+    }
+
+    .nav-dot.active {
+      width: 26px;
+      border-radius: 5px;
+      background: var(--accent-cyan);
+      box-shadow: 0 0 10px var(--accent-cyan);
+    }
+
+    /* Print / PDF Styles */
+    @media print {
+      body {
+        overflow: visible;
+        background: #0b0f19;
+      }
+      .controls, .bg-mesh {
+        display: none !important;
+      }
+      .deck-container {
+        width: 100% !important;
+        height: auto !important;
+        max-width: none !important;
+      }
+      .slide {
+        position: relative !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        transform: none !important;
+        page-break-after: always;
+        height: 100vh;
+        margin-bottom: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-mesh"></div>
+
+  <div class="deck-container">
+
+    <!-- SLIDE 1 -->
+    <div class="slide active" id="slide-1">
+      <div class="slide-header">
+        <div class="slide-badge-row">
+          <div class="slide-badge"><span class="dot"></span> Mandatory Slide 01 &bull; Vecnaverse 2026</div>
+          <div class="slide-counter">01 / 05</div>
+        </div>
+        <h1 class="slide-title">Problem Statement and Understanding</h1>
+        <p class="slide-subtitle">India's urban centers house millions of tech builders, yet grassroots event discovery remains broken and fragmented.</p>
+      </div>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-icon" style="background: rgba(168, 85, 247, 0.15); color: var(--accent-purple);">01</div>
+          <h2 class="card-title">Fragmented Discovery</h2>
+          <ul class="card-list">
+            <li><strong>Trapped in Silos:</strong> 85%+ of tech meetups, hackathons, and cultural jams live in closed WhatsApp groups or ephemeral Instagram stories.</li>
+            <li><strong>Zero Central Hub:</strong> No single platform tracks grassroots, community-driven gatherings.</li>
+            <li><strong>Massive Opportunity Cost:</strong> Builders and founders miss critical networking happening 2 km away.</li>
+            <li><strong>Organizer Invisibility:</strong> First-time indie organizers struggle to reach audiences outside their immediate contact list.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-icon" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan);">02</div>
+          <h2 class="card-title">The "Hyperlocal" Void</h2>
+          <ul class="card-list">
+            <li><strong>City-Wide Is Broken:</strong> Legacy platforms list events for an entire metro (e.g. "Mumbai" or "Bengaluru").</li>
+            <li><strong>Transit Nightmare:</strong> An event 35 km away across town is practically inaccessible during peak traffic hours.</li>
+            <li><strong>The Missing Question:</strong> No platform answers: <em>"What tech or creator events are within 5 to 10 km of me today?"</em></li>
+            <li><strong>Lack of Real Proximity:</strong> Absence of live GPS radius filters calibrated for Indian urban commutes.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-icon" style="background: rgba(59, 130, 246, 0.15); color: var(--accent-blue);">03</div>
+          <h2 class="card-title">High Organizer Friction</h2>
+          <ul class="card-list">
+            <li><strong>Hostile Setup:</strong> Legacy platforms demand coordinate lookups, lengthy approval queues, or steep monthly fees ($35+/mo).</li>
+            <li><strong>Costly API Traps:</strong> Commercial map APIs (Mapbox, Google Maps SDK) force unsustainable fees on free events.</li>
+            <li><strong>Our Solution Understanding:</strong> We need sub-50ms GPS radius filtering paired with effortless 60-second creation via plain Google Maps links.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 2 -->
+    <div class="slide" id="slide-2">
+      <div class="slide-header">
+        <div class="slide-badge-row">
+          <div class="slide-badge"><span class="dot"></span> Mandatory Slide 02 &bull; Architecture</div>
+          <div class="slide-counter">02 / 05</div>
+        </div>
+        <h1 class="slide-title">Technical Approach</h1>
+        <p class="slide-subtitle">A modern, scalable architecture coupling Next.js 14 App Router with Supabase's PostGIS spatial calculation engine.</p>
+      </div>
+
+      <div class="grid-4">
+        <div class="card">
+          <div class="card-icon" style="background: rgba(59, 130, 246, 0.15); color: var(--accent-blue);">UI</div>
+          <h2 class="card-title">Frontend & Apple HIG</h2>
+          <ul class="card-list">
+            <li>Next.js 14 App Router + TypeScript + Tailwind CSS v4.</li>
+            <li>Apple HIG tactile craft: glassmorphism (24px blur), spring physics micro-interactions.</li>
+            <li>Dual Light & Dark modes with WCAG AAA contrast compliance.</li>
+            <li>Browser Geolocation + Haversine distance computations.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-green);">DB</div>
+          <h2 class="card-title">PostGIS Spatial Engine</h2>
+          <ul class="card-list">
+            <li>Supabase PostgreSQL with native PostGIS spatial extension.</li>
+            <li>Stored procedure <code>get_nearby_events</code> using <code>ST_DWithin</code> & <code>ST_Distance</code>.</li>
+            <li>GiST spatial indexes on <code>geography(Point, 4326)</code> for sub-50ms spatial lookups.</li>
+            <li>Pre-seeded coordinate anchors for 5 major Indian metros.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-icon" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan);">MAP</div>
+          <h2 class="card-title">Maps Link Parser</h2>
+          <ul class="card-list">
+            <li>Proprietary URL extractor in <code>lib/maps.ts</code>.</li>
+            <li>Accepts any Google Maps link (place, venue pin, directions, coordinates).</li>
+            <li>Zero geocoding API keys required — saves 100% of mapping API costs.</li>
+            <li>Generates direct one-click turn-by-turn navigation URLs.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-icon" style="background: rgba(168, 85, 247, 0.15); color: var(--accent-purple);">SEC</div>
+          <h2 class="card-title">Auth & Real Checkout</h2>
+          <ul class="card-list">
+            <li>Real Supabase Auth (Email OTP, Password, OAuth).</li>
+            <li>Row-Level Security (RLS) policies protecting RSVPs, events, and community walls.</li>
+            <li>Apple-styled payment checkout supporting UPI, Cards, and Netbanking.</li>
+            <li>Instant QR Digital Ticket generation & calendar exports (.ics / Google).</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3 -->
+    <div class="slide" id="slide-3">
+      <div class="slide-header">
+        <div class="slide-badge-row">
+          <div class="slide-badge"><span class="dot"></span> Mandatory Slide 03 &bull; Business & Tech</div>
+          <div class="slide-counter">03 / 05</div>
+        </div>
+        <h1 class="slide-title">Feasibility & Viability</h1>
+        <p class="slide-subtitle">100% Free-tier operational footprint today, scalable to millions of users with robust, sustainable revenue streams.</p>
+      </div>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-green);">₹0</div>
+          <h2 class="card-title">Zero Infrastructure Burn</h2>
+          <ul class="card-list">
+            <li><strong>100% Free-Tier Stack:</strong> Supabase Free Tier (PostgreSQL + PostGIS) + Vercel Edge Serverless hosting.</li>
+            <li><strong>Zero Map API Cost:</strong> Utilizing Google Maps redirection instead of embedded commercial tiles saves $200-$1,000/month.</li>
+            <li><strong>Production Live:</strong> Deployed live at <code>eventradar-mu.vercel.app</code> with 0 errors (18/18 routes compiled).</li>
+            <li><strong>Stateless Edge Architecture:</strong> Near-zero server memory footprint with automatic CI/CD deployment.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-icon" style="background: rgba(59, 130, 246, 0.15); color: var(--accent-blue);">100x</div>
+          <h2 class="card-title">Technical Scalability</h2>
+          <ul class="card-list">
+            <li><strong>PostGIS Spatial Indexing:</strong> GiST bounding-box indexes enable O(log N) searches over 500,000+ localized events.</li>
+            <li><strong>Supabase Supavisor:</strong> Built-in connection pooling handles concurrent traffic spikes during viral community events.</li>
+            <li><strong>Edge-Cached Landing Page:</strong> Static generation with incremental ISR revalidation minimizes DB reads.</li>
+            <li><strong>Clean Engineering:</strong> 0 ESLint warnings, 100% TypeScript type safety.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-icon" style="background: rgba(168, 85, 247, 0.15); color: var(--accent-purple);">$$</div>
+          <h2 class="card-title">Revenue & Sustainability</h2>
+          <ul class="card-list">
+            <li><strong>1. "Radar Boost" (Featured Pins):</strong> Promoted visibility for hackathons, tech conferences, and brand launches.</li>
+            <li><strong>2. Ticketing Convenience Fee:</strong> Modest 2-3% platform fee on paid workshops and concerts via UPI.</li>
+            <li><strong>3. Hyperlocal Venue Sponsorships:</strong> Co-working spaces and cafe hubs sponsor neighborhood radars to drive footfall.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4 -->
+    <div class="slide" id="slide-4">
+      <div class="slide-header">
+        <div class="slide-badge-row">
+          <div class="slide-badge"><span class="dot"></span> Mandatory Slide 04 &bull; Community Impact</div>
+          <div class="slide-counter">04 / 05</div>
+        </div>
+        <h1 class="slide-title">Impact & Benefit</h1>
+        <p class="slide-subtitle">Democratizing event access for 500M+ urban Indians and supercharging grassroots tech communities.</p>
+      </div>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-icon" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan);">🚀</div>
+          <h2 class="card-title">For Attendees & Builders</h2>
+          <ul class="card-list">
+            <li><strong>Eliminates Local FOMO:</strong> Discovers hackathons, demo days, and jams happening within 5km of their exact location.</li>
+            <li><strong>Saves Commute Hours:</strong> Stops users from spending 2 hours traversing congested metros for irrelevant gatherings.</li>
+            <li><strong>One-Tap Attendance:</strong> 1-click RSVP with real-time attendee counter, .ICS calendar export, and Google Maps routing.</li>
+            <li><strong>Interactive Community Wall:</strong> Direct pre-event discussions with organizers and attendees.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-green);">⚡</div>
+          <h2 class="card-title">For Community Organizers</h2>
+          <ul class="card-list">
+            <li><strong>Sub-60s Publishing:</strong> Drop a title and paste a Google Maps link. No manual lat/lng lookups or complex forms.</li>
+            <li><strong>100% Free Hosting:</strong> Zero subscription fees, unlike Meetup.com's $35/month paywall.</li>
+            <li><strong>Dedicated Organizer Hub:</strong> Manage RSVPs, track attendee growth, and edit/cancel events at <code>/profile/my-events</code>.</li>
+            <li><strong>Instant UPI Checkout:</strong> Seamless ticket collection with automated QR pass generation.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-icon" style="background: rgba(168, 85, 247, 0.15); color: var(--accent-purple);">🌐</div>
+          <h2 class="card-title">Societal & Urban Value</h2>
+          <ul class="card-list">
+            <li><strong>Revitalizes Local Hubs:</strong> Channels footfall to local cafes, maker spaces, and co-working hubs.</li>
+            <li><strong>Grassroots Serendipity:</strong> Fosters organic collaboration between student developers, founders, and creators.</li>
+            <li><strong>True Accessibility:</strong> Built to Apple HIG standards with light/dark high contrast, keyboard navigation, and fast 4G/5G loading.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 5 -->
+    <div class="slide" id="slide-5">
+      <div class="slide-header">
+        <div class="slide-badge-row">
+          <div class="slide-badge"><span class="dot"></span> Mandatory Slide 05 &bull; Competitive Edge</div>
+          <div class="slide-counter">05 / 05</div>
+        </div>
+        <h1 class="slide-title">Comparison with Existing Platforms</h1>
+        <p class="slide-subtitle">How Event Radar fundamentally outclasses legacy directories across every key hyperlocal metric.</p>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th class="col-highlight">Event Radar (Ours)</th>
+              <th>Meetup.com</th>
+              <th>BookMyShow</th>
+              <th>Eventbrite</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Hyperlocal Radius Filter</strong></td>
+              <td class="col-highlight"><strong>Yes (5-50km GPS / PostGIS)</strong></td>
+              <td>City-wide only</td>
+              <td>City-wide only</td>
+              <td>Coarse radius</td>
+            </tr>
+            <tr>
+              <td><strong>Organizer Pricing</strong></td>
+              <td class="col-highlight"><strong>100% Free Tier</strong></td>
+              <td>$30 - $40 / month subscription</td>
+              <td>Manual partner cut (10-15%)</td>
+              <td>Platform ticketing fees</td>
+            </tr>
+            <tr>
+              <td><strong>Creation Speed</strong></td>
+              <td class="col-highlight"><strong>&lt; 60s (Paste Maps link)</strong></td>
+              <td>Complex multi-step wizard</td>
+              <td>Lengthy partner verification</td>
+              <td>Multi-page configuration</td>
+            </tr>
+            <tr>
+              <td><strong>Navigation Integration</strong></td>
+              <td class="col-highlight"><strong>Zero-cost Google Maps redirect</strong></td>
+              <td>Static unclickable map image</td>
+              <td>Embedded app map only</td>
+              <td>Text address only</td>
+            </tr>
+            <tr>
+              <td><strong>India Payment Ecosystem</strong></td>
+              <td class="col-highlight"><strong>Native UPI / QR / Cards</strong></td>
+              <td>Stripe / PayPal only</td>
+              <td>UPI / Cards</td>
+              <td>Stripe / International</td>
+            </tr>
+            <tr>
+              <td><strong>Design & Experience</strong></td>
+              <td class="col-highlight"><strong>Apple HIG Glassmorphism</strong></td>
+              <td>Dated Web 2.0 interface</td>
+              <td>Heavy commercial advertisements</td>
+              <td>Generic corporate UI</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="killer-box">
+        <div class="killer-badge">Killer Feature</div>
+        <div class="killer-text">
+          <strong>"Zero-Cost Maps Link to Proximity Radar Pipeline"</strong>: Organizers post in under 60 seconds by simply pasting a Google Maps link. Our backend parser extracts coordinates without paid geocoding APIs, PostGIS indexes the venue, and nearby attendees get live GPS proximity filtering and instant turn-by-turn navigation with <strong>₹0 mapping overhead</strong>.
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Navigation & Controls -->
+  <div class="controls">
+    <button class="btn" id="prev-btn" onclick="prevSlide()">&#8592; Prev</button>
+    
+    <div class="dots-container">
+      <div class="nav-dot active" onclick="goToSlide(1)"></div>
+      <div class="nav-dot" onclick="goToSlide(2)"></div>
+      <div class="nav-dot" onclick="goToSlide(3)"></div>
+      <div class="nav-dot" onclick="goToSlide(4)"></div>
+      <div class="nav-dot" onclick="goToSlide(5)"></div>
+    </div>
+
+    <button class="btn" id="next-btn" onclick="nextSlide()">Next &#8594;</button>
+    <button class="btn primary" onclick="window.print()">Print / Export PDF</button>
+  </div>
+
+  <script>
+    let currentSlide = 1;
+    const totalSlides = 5;
+
+    function updateSlides() {
+      for (let i = 1; i <= totalSlides; i++) {
+        const slide = document.getElementById(`slide-${i}`);
+        const dots = document.querySelectorAll('.nav-dot');
+        if (i === currentSlide) {
+          slide.classList.add('active');
+          dots[i - 1].classList.add('active');
+        } else {
+          slide.classList.remove('active');
+          dots[i - 1].classList.remove('active');
+        }
+      }
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides) {
+        currentSlide++;
+        updateSlides();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 1) {
+        currentSlide--;
+        updateSlides();
+      }
+    }
+
+    function goToSlide(n) {
+      currentSlide = n;
+      updateSlides();
+    }
+
+    // Keyboard Shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        prevSlide();
+      } else if (e.key >= '1' && e.key <= '5') {
+        goToSlide(parseInt(e.key));
+      }
+    });
+  </script>
+</body>
+</html>
+
